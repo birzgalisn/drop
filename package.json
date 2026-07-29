@@ -19,6 +19,7 @@
   "devDependencies": {
     "@repo/tooling": "workspace:*",
     "eslint-plugin-turbo": "catalog:",
+    "graphql-config": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "turbo": "catalog:"
