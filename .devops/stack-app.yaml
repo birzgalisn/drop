@@ -1,0 +1,86 @@
+services:
+  api:
+    image: ${IMAGE_ROOT}-api:${IMAGE_TAG}
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      API_BASE_URL: ${API_BASE_URL}
+      APEX: ${APEX}
+    volumes:
+      - media_data:/drop-media
+    networks:
+      - drop_edge
+      - drop_internal
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 2s
+        order: start-first
+        failure_action: rollback
+        monitor: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 2s
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.${PROJECT}-api.rule=Host(`api.${APEX}`)
+        - traefik.http.routers.${PROJECT}-api.entrypoints=https
+        - traefik.http.routers.${PROJECT}-api.tls=true
+        - traefik.http.routers.${PROJECT}-api.tls.certresolver=letsencrypt
+        - traefik.http.routers.${PROJECT}-api.service=${PROJECT}-api
+        - traefik.http.services.${PROJECT}-api.loadbalancer.server.port=3000
+        - traefik.http.services.${PROJECT}-api.loadbalancer.healthcheck.path=/up
+        - traefik.http.services.${PROJECT}-api.loadbalancer.healthcheck.interval=2s
+        - traefik.http.services.${PROJECT}-api.loadbalancer.healthcheck.timeout=1s
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:3000/up]
+      interval: 2s
+      timeout: 1s
+      retries: 3
+      start_period: 5s
+
+  web:
+    image: ${IMAGE_ROOT}-web:${IMAGE_TAG}
+    networks:
+      - drop_edge
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 2s
+        order: start-first
+        failure_action: rollback
+        monitor: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 2s
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.${PROJECT}-web.rule=Host(`app.${APEX}`)
+        - traefik.http.routers.${PROJECT}-web.entrypoints=https
+        - traefik.http.routers.${PROJECT}-web.tls=true
+        - traefik.http.routers.${PROJECT}-web.tls.certresolver=letsencrypt
+        - traefik.http.routers.${PROJECT}-web.service=${PROJECT}-web
+        - traefik.http.services.${PROJECT}-web.loadbalancer.server.port=80
+        - traefik.http.services.${PROJECT}-web.loadbalancer.healthcheck.path=/up
+        - traefik.http.services.${PROJECT}-web.loadbalancer.healthcheck.interval=2s
+        - traefik.http.services.${PROJECT}-web.loadbalancer.healthcheck.timeout=1s
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1/up]
+      interval: 2s
+      timeout: 1s
+      retries: 3
+      start_period: 5s
+
+networks:
+  drop_edge:
+    external: true
+  drop_internal:
+    external: true
+
+volumes:
+  media_data:
+    external: true
+    name: drop_media

@@ -1,0 +1,85 @@
+services:
+  postgres:
+    image: postgres:18.4-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: /var/lib/postgresql
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: host
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - drop_internal
+    healthcheck:
+      test: [CMD, pg_isready, -U, "${POSTGRES_USER}", -d, "${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      update_config:
+        order: start-first
+        failure_action: rollback
+
+  redis:
+    image: redis:8.8-alpine
+    command:
+      - /bin/sh
+      - -c
+      - redis-server --save 60 1 --loglevel warning --requirepass "$$REDISCLI_AUTH" --protected-mode yes
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - drop_internal
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      update_config:
+        order: start-first
+        failure_action: rollback
+
+  media-provision:
+    image: busybox:1.38
+    user: root
+    volumes:
+      - media_data:/drop-media
+    command: chown -R 1000:1000 /drop-media
+    deploy:
+      restart_policy:
+        condition: none
+        max_attempts: 1
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+    name: drop_media
+
+networks:
+  drop_internal:
+    external: true

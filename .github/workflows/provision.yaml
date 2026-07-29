@@ -1,0 +1,58 @@
+name: provision
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.repository }}-swarm-deploy
+  cancel-in-progress: false
+
+env:
+  SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  SWARM_ADVERTISE_ADDR: ${{ secrets.SWARM_ADVERTISE_ADDR }}
+  PROJECT: ${{ vars.PROJECT }}
+  APEX: ${{ vars.APEX }}
+  CF_DNS_API_TOKEN: ${{ secrets.CF_DNS_API_TOKEN }}
+  ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
+  POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+  REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+
+jobs:
+  provision:
+    name: Swarm edge + data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            .devops
+
+      - name: Provision over SSH
+        run: |
+          set -euo pipefail
+          ssh-agent -a "$SSH_AUTH_SOCK" > /dev/null
+          ssh-add - <<< "${{ secrets.SSH_KEY }}"
+          mkdir -p ~/.ssh
+          printf '%s\n' 'HOST *' 'StrictHostKeyChecking no' > ~/.ssh/config
+
+          export DOCKER_HOST="ssh://${SSH_USER}@${SSH_HOST}"
+
+          state="$(docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo inactive)"
+          if [ "$state" != active ]; then
+            docker swarm init --advertise-addr "${SWARM_ADVERTISE_ADDR}"
+          fi
+
+          docker network inspect drop_edge >/dev/null 2>&1 \
+            || docker network create --driver overlay --attachable drop_edge
+          docker network inspect drop_internal >/dev/null 2>&1 \
+            || docker network create --driver overlay --attachable drop_internal
+
+          docker stack deploy -c .devops/stack-edge.yaml drop_edge
+          docker stack deploy -c .devops/stack-data.yaml drop_data

@@ -1,0 +1,63 @@
+.mosaic {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), clamp(1.45rem, 4.4vw, 2.35rem));
+  grid-template-rows: repeat(var(--rows), clamp(1.85rem, 5.6vw, 2.95rem));
+  /* Shared blueprint gaps — digits align on the same tracks. */
+  column-gap: clamp(-0.22rem, -0.7vw, -0.08rem);
+  row-gap: clamp(-0.28rem, -0.85vw, -0.12rem);
+  justify-content: center;
+  user-select: none;
+}
+
+.cell,
+.stray {
+  z-index: var(--z, 1);
+  transform: translate(var(--jx, 0px), var(--jy, 0px)) scale(var(--stack-scale, 1))
+    rotate(var(--rest-rot, 0deg));
+}
+
+.cell {
+  position: relative;
+}
+
+.stray {
+  position: absolute;
+  width: clamp(2.2rem, 7vw, 3.4rem);
+  top: var(--top);
+  left: var(--left);
+  pointer-events: none;
+}
+
+.stack {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.layer {
+  z-index: var(--layer-z, 1);
+  display: block;
+  width: 100%;
+  aspect-ratio: 40 / 52;
+  transform: translate(var(--lx, 0px), var(--ly, 0px)) scale(var(--layer-scale, 1))
+    rotate(var(--layer-rot, 0deg));
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 35%)) drop-shadow(0 8px 12px rgb(0 0 0 / 30%));
+}
+
+.layerBack {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.layerFront {
+  position: relative;
+}
+
+.glyph {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}

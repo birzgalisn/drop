@@ -1,0 +1,5 @@
+query SharedSpace($token: String!) {
+  sharedSpace(token: $token) {
+    ...SpaceFields
+  }
+}

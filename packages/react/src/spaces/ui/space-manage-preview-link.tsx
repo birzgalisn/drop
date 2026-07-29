@@ -1,0 +1,33 @@
+import { Badge, Tooltip } from '@mantine/core';
+import { ArrowSquareOutIcon } from '@phosphor-icons/react/ArrowSquareOut';
+
+import { getShareViewerUrl } from '../util/get-share-viewer-url';
+import { stashShareViewerPin } from '../util/share-viewer-pin';
+
+/** Opens the share as a recipient would see it, PIN included when we have it. */
+export function SpaceManagePreviewLink({ token, pin }: { token: string; pin?: string }) {
+  const previewUrl = pin ? getShareViewerUrl({ token, pin }) : getShareViewerUrl({ token });
+
+  return (
+    <Tooltip label="Open share as a recipient">
+      <Badge
+        component="a"
+        href={previewUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        color="sand"
+        variant="light"
+        mt={4}
+        rightSection={<ArrowSquareOutIcon size={12} />}
+        style={{ cursor: 'pointer', flexShrink: 0 }}
+        onClick={() => {
+          if (pin) {
+            stashShareViewerPin({ token, pin });
+          }
+        }}
+      >
+        Preview
+      </Badge>
+    </Tooltip>
+  );
+}

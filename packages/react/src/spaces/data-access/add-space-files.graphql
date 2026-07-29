@@ -1,0 +1,10 @@
+mutation AddSpaceFiles($input: AddSpaceFilesInput!) {
+  addSpaceFiles(input: $input) {
+    space {
+      ...SpaceFields
+    }
+    files {
+      ...SpaceFileFields
+    }
+  }
+}

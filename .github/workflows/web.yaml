@@ -1,0 +1,51 @@
+name: web
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - apps/web/**
+      - packages/react/**
+      - packages/shared/**
+      - packages/tooling/**
+      - apps/web/Dockerfile
+      - .devops/stack-app.yaml
+      - .github/workflows/web.yaml
+      - .github/workflows/ci.yaml
+      - .github/workflows/cd.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    name: Build and push
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/ci.yaml
+    with:
+      app: web
+      build-args: |
+        VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+
+  deploy:
+    name: Deploy
+    needs: build-push
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/cd.yaml
+    with:
+      image_root: ${{ needs.build-push.outputs.image_root }}
+      image_tag: ${{ needs.build-push.outputs.image_tag }}
+      app: web
+    secrets: inherit

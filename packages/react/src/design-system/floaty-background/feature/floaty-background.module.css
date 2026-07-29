@@ -1,0 +1,88 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(196, 168, 130, 0.09), transparent 55%),
+    radial-gradient(90% 60% at 100% 100%, rgba(24, 32, 42, 0.9), transparent 50%),
+    linear-gradient(165deg, #0b0d10 0%, #10131a 48%, #0c0f14 100%);
+  /* Keep backdrop on its own layer so content hovers don't wait on it. */
+  transform: translateZ(0);
+  contain: strict;
+}
+
+.veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(11, 13, 16, 0.35) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.012) 3px,
+      rgba(255, 255, 255, 0.012) 4px
+    );
+  opacity: 0.85;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  /* Soft falloff via gradient only — CSS filter:blur on huge animated layers
+     blocks hover paints on content above. */
+  opacity: 0.55;
+  animation: drift 32s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.glowA {
+  top: -28%;
+  left: 8%;
+  width: 70vw;
+  height: 55vw;
+  background: radial-gradient(
+    circle,
+    rgba(196, 168, 130, 0.2) 0%,
+    rgba(196, 168, 130, 0.06) 35%,
+    transparent 68%
+  );
+}
+
+.glowB {
+  bottom: -32%;
+  right: -14%;
+  width: 62vw;
+  height: 62vw;
+  background: radial-gradient(
+    circle,
+    rgba(52, 62, 78, 0.5) 0%,
+    rgba(52, 62, 78, 0.15) 40%,
+    transparent 70%
+  );
+  animation-delay: -11s;
+  animation-duration: 40s;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(2%, 3%, 0) scale(1.04);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow {
+    animation: none;
+  }
+}

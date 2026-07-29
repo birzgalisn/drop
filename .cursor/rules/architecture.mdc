@@ -1,0 +1,13 @@
+---
+description: Drop monorepo architecture — apps thin, domains in packages
+globs:
+alwaysApply: true
+---
+
+# Architecture
+
+- `apps/api` and `apps/web` are **thin shells** that compose `@repo/nest` / `@repo/react`.
+- Domains live in packages: Nest feature folders under `packages/nest/src/<domain>/`, React under `packages/react/src/<domain>/`.
+- `@repo/shared` is isomorphic only (zod, constants, AppError) — **no** Nest/React imports.
+- Product name is **Drop**; domain aggregate is **space** (never `Drop*` for domain identifiers).
+- Hierarchy: **space → (optional) folder → file**. This phase is flat spaces only.

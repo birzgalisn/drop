@@ -1,0 +1,44 @@
+{
+  "name": "@repo/react",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./design-system": "./src/design-system/index.ts",
+    "./logo": "./src/logo/feature/drop-logo.tsx",
+    "./spaces": "./src/spaces/feature/space-wizard.tsx",
+    "./spaces/share-viewer": "./src/spaces/share-viewer/feature/share-viewer.tsx",
+    "./spaces/manage": "./src/spaces/feature/space-manage.tsx",
+    "./form": "./src/common/hooks/use-app-form.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "lint": "oxlint .",
+    "clean": "find src -type f -name '*.generated.ts' -delete; rm -rf node_modules .turbo dist src/_generated tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@apollo/client": "catalog:",
+    "@graphql-typed-document-node/core": "catalog:",
+    "@mantine/core": "catalog:",
+    "@mantine/dropzone": "catalog:",
+    "@mantine/form": "catalog:",
+    "@mantine/hooks": "catalog:",
+    "@mantine/notifications": "catalog:",
+    "@phosphor-icons/react": "catalog:",
+    "@repo/shared": "workspace:*",
+    "clsx": "catalog:",
+    "graphql": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tus-js-client": "catalog:",
+    "zod": "catalog:",
+    "zustand": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/tooling": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

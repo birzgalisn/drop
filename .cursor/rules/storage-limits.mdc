@@ -1,0 +1,20 @@
+---
+description: Storage reserve and space size caps
+globs:
+  - packages/shared/**
+  - packages/nest/**
+  - packages/react/**
+alwaysApply: false
+---
+
+# Storage limits
+
+Authoritative constants in `@repo/shared` (`SpaceConfig`):
+
+- `ByteSize.STORAGE_RESERVE` — 5 GiB must remain free
+- `SpaceConfig.FILE_MAX_BYTES` — 25 MiB
+- `SpaceConfig.MAX_BYTES` — 250 MiB
+- `SpaceConfig.MAX_FILES` — 50
+- `SpaceConfig.ACCEPTED_MIME_TYPES` — jpeg + png (v1)
+
+Enforce on FE dropzone, GraphQL add-files, and tus `onUploadCreate`.

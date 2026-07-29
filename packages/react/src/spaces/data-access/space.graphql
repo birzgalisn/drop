@@ -1,0 +1,5 @@
+query Space($id: ID!) {
+  space(id: $id) {
+    ...SpaceFields
+  }
+}

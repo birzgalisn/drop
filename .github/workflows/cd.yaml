@@ -1,0 +1,81 @@
+name: cd
+
+on:
+  workflow_call:
+    inputs:
+      image_root:
+        description: ghcr.io/owner/repo (images are root-api / root-web)
+        required: true
+        type: string
+      image_tag:
+        description: Tag to deploy (usually main)
+        required: true
+        type: string
+      app:
+        description: Which service to roll (api or web)
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.repository }}-swarm-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  PROJECT: ${{ vars.PROJECT }}
+  APEX: ${{ vars.APEX }}
+  IMAGE_ROOT: ${{ inputs.image_root }}
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  API_BASE_URL: ${{ vars.API_BASE_URL }}
+  DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
+  REDIS_URL: redis://:${{ secrets.REDIS_PASSWORD }}@redis:6379/0
+
+jobs:
+  deploy:
+    name: Deploy drop_app_${{ inputs.app }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            .devops
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: docker stack deploy over SSH
+        run: |
+          set -euo pipefail
+          app="${{ inputs.app }}"
+          case "$app" in
+            api|web) ;;
+            *)
+              echo "Unsupported app: $app (expected api or web)" >&2
+              exit 1
+              ;;
+          esac
+
+          ssh-agent -a "$SSH_AUTH_SOCK" > /dev/null
+          ssh-add - <<< "${{ secrets.SSH_KEY }}"
+          mkdir -p ~/.ssh
+          printf '%s\n' 'HOST *' 'StrictHostKeyChecking no' > ~/.ssh/config
+
+          export DOCKER_HOST="ssh://${SSH_USER}@${SSH_HOST}"
+
+          docker pull "${IMAGE_ROOT}-${app}:${IMAGE_TAG}"
+
+          docker stack deploy --with-registry-auth \
+            -c .devops/stack-app.yaml drop_app
+
+          docker service update --detach=false \
+            --image "${IMAGE_ROOT}-${app}:${IMAGE_TAG}" \
+            "drop_app_${app}"

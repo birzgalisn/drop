@@ -1,0 +1,56 @@
+name: migrate
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+
+jobs:
+  migrate:
+    name: Migrate database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            package.json
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
+            packages/nest
+            packages/shared
+            packages/tooling
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Tunnel to Postgres and migrate
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: |
+          set -euo pipefail
+          ssh-agent -a "$SSH_AUTH_SOCK" > /dev/null
+          ssh-add - <<< "${{ secrets.SSH_KEY }}"
+          mkdir -p ~/.ssh
+          printf '%s\n' 'HOST *' 'StrictHostKeyChecking no' > ~/.ssh/config
+
+          ssh -f -N -o ExitOnForwardFailure=yes \
+            -L 5432:127.0.0.1:5432 \
+            "${SSH_USER}@${SSH_HOST}"
+
+          export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:5432/${POSTGRES_DB}"
+          pnpm --filter=@repo/nest run db:deploy

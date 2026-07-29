@@ -1,0 +1,44 @@
+{
+  "name": "drop",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "generate": "turbo run generate",
+    "build": "turbo run build",
+    "check-types": "turbo run check-types",
+    "clean": "turbo run clean && rm -rf .pnpm-home .pnpm-store .turbo node_modules out",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "db:generate": "pnpm --filter=@repo/nest db:generate",
+    "db:deploy": "pnpm --filter=@repo/nest db:deploy",
+    "db:studio": "pnpm --filter=@repo/nest db:studio"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "catalog:",
+    "@graphql-codegen/near-operation-file-preset": "catalog:",
+    "@graphql-codegen/typed-document-node": "catalog:",
+    "@graphql-codegen/typescript": "catalog:",
+    "@graphql-codegen/typescript-operations": "catalog:",
+    "@parcel/watcher": "catalog:",
+    "@repo/tooling": "workspace:*",
+    "eslint-plugin-turbo": "catalog:",
+    "graphql": "catalog:",
+    "graphql-config": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "turbo": "catalog:"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-linux-x64-gnu": "catalog:",
+    "@rolldown/binding-linux-x64-musl": "catalog:",
+    "@rspack/binding-linux-x64-gnu": "catalog:",
+    "@rspack/binding-linux-x64-musl": "catalog:"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1"
+}

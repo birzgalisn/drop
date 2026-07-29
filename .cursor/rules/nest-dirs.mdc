@@ -1,0 +1,22 @@
+---
+description: Nest feature folder layout (Relay-style)
+globs:
+  - packages/nest/**
+alwaysApply: false
+---
+
+# Nest dirs
+
+Inside `packages/nest/src/<domain>/`:
+
+- `use-cases/` — one class per repo-method-sized data op (Drizzle SQL inline)
+- `workflows/` — multi-step orchestration
+- `modules/` — focused Nest modules when needed
+- `tus/hooks/`, `tus/schemas/` — domain tus handlers + metadata contracts
+- `models/` — GraphQL `@ObjectType` (return DB rows; `@ResolveField` for derived; no `@Field` on secrets; **no mappers/**)
+- `enums/`, `dto/`, `services/`, `jobs/`, `controllers/`, `pipes/`, `util/`
+- Resolver at domain root: `<domain>.resolver.ts` (like `health/`)
+
+Infra top-level: `tus/`, `media/`, `drizzle/`, `errors/`, `validation/`, `pubsub/`.
+
+Do **not** add `db/*.queries.ts` or `presentation/graphql/mappers`.

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "globalEnv": ["NODE_ENV", "DATABASE_URL", "REDIS_URL", "MEDIA_ROOT", "API_BASE_URL", "APEX"],
+  "tasks": {
+    "db:deploy": {
+      "cache": false
+    },
+
+    "generate": {
+      "cache": false
+    },
+    "generate:schema": {
+      "outputs": ["src/_generated/schema.graphql"],
+      "cache": false
+    },
+    "@repo/tooling#generate": {
+      "dependsOn": ["api#generate:schema"],
+      "cache": false
+    },
+
+    "dev": {
+      "dependsOn": ["@repo/nest#db:deploy", "api#generate:schema", "@repo/tooling#generate"],
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build", "generate"],
+      "outputs": ["dist/**"]
+    },
+    "@repo/tooling#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "clean": {
+      "cache": false
+    },
+
+    "check-types": {
+      "dependsOn": ["^check-types"],
+      "cache": false
+    },
+    "lint": {},
+    "test": {}
+  }
+}

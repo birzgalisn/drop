@@ -1,0 +1,9 @@
+mutation CreateShare($input: CreateShareInput!) {
+  createShare(input: $input) {
+    id
+    spaceId
+    token
+    expiresAt
+    createdAt
+  }
+}

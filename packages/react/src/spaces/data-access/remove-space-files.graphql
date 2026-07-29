@@ -1,0 +1,5 @@
+mutation RemoveSpaceFiles($spaceId: ID!, $fileIds: [ID!]!) {
+  removeSpaceFiles(spaceId: $spaceId, fileIds: $fileIds) {
+    ...SpaceFields
+  }
+}

@@ -1,0 +1,12 @@
+---
+description: Function argument style
+globs:
+alwaysApply: true
+---
+
+# Function args
+
+- One parameter → positional arg is fine.
+- Two or more parameters → single **options object**.
+- Applies to use-cases, workflows, helpers, and hooks.
+- Exception: Nest DI constructors, framework APIs, and use-case `execute(input, db?)` / `execute(db?)` where `db` is an optional `DrizzleClient` (usually a transaction).

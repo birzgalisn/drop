@@ -1,0 +1,121 @@
+{
+  "name": "@repo/nest",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "dist",
+    "drizzle"
+  ],
+  "exports": {
+    "./common": {
+      "types": "./src/common/index.ts",
+      "@repo": "./src/common/index.ts",
+      "development": "./src/common/index.ts",
+      "default": "./src/common/index.ts"
+    },
+    "./config": {
+      "types": "./src/config/index.ts",
+      "@repo": "./src/config/index.ts",
+      "development": "./src/config/index.ts",
+      "default": "./src/config/index.ts"
+    },
+    "./cors": {
+      "types": "./src/cors/index.ts",
+      "@repo": "./src/cors/index.ts",
+      "development": "./src/cors/index.ts",
+      "default": "./src/cors/index.ts"
+    },
+    "./drizzle": {
+      "types": "./src/drizzle/index.ts",
+      "@repo": "./src/drizzle/index.ts",
+      "development": "./src/drizzle/index.ts",
+      "default": "./src/drizzle/index.ts"
+    },
+    "./errors": {
+      "types": "./src/errors/index.ts",
+      "@repo": "./src/errors/index.ts",
+      "development": "./src/errors/index.ts",
+      "default": "./src/errors/index.ts"
+    },
+    "./health": {
+      "types": "./src/health/index.ts",
+      "@repo": "./src/health/index.ts",
+      "development": "./src/health/index.ts",
+      "default": "./src/health/index.ts"
+    },
+    "./media": {
+      "types": "./src/media/index.ts",
+      "@repo": "./src/media/index.ts",
+      "development": "./src/media/index.ts",
+      "default": "./src/media/index.ts"
+    },
+    "./pubsub": {
+      "types": "./src/pubsub/index.ts",
+      "@repo": "./src/pubsub/index.ts",
+      "development": "./src/pubsub/index.ts",
+      "default": "./src/pubsub/index.ts"
+    },
+    "./spaces": {
+      "types": "./src/spaces/index.ts",
+      "@repo": "./src/spaces/index.ts",
+      "development": "./src/spaces/index.ts",
+      "default": "./src/spaces/index.ts"
+    },
+    "./tus": {
+      "types": "./src/tus/index.ts",
+      "@repo": "./src/tus/index.ts",
+      "development": "./src/tus/index.ts",
+      "default": "./src/tus/index.ts"
+    },
+    "./validation": {
+      "types": "./src/validation/index.ts",
+      "@repo": "./src/validation/index.ts",
+      "development": "./src/validation/index.ts",
+      "default": "./src/validation/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "check-types": "tsc --noEmit",
+    "lint": "oxlint .",
+    "clean": "rm -rf .turbo dist node_modules tsconfig.tsbuildinfo",
+    "dev": "pnpm run db:studio",
+    "db:generate": "drizzle-kit generate",
+    "db:deploy": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983"
+  },
+  "dependencies": {
+    "@fastify/cookie": "catalog:",
+    "@nestjs/bullmq": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
+    "@nestjs/core": "catalog:",
+    "@nestjs/graphql": "catalog:",
+    "@nestjs/platform-fastify": "catalog:",
+    "@nestjs/schedule": "catalog:",
+    "@repo/shared": "workspace:*",
+    "@tus/file-store": "catalog:",
+    "@tus/server": "catalog:",
+    "archiver": "catalog:",
+    "bullmq": "catalog:",
+    "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "fastify": "catalog:",
+    "graphql": "catalog:",
+    "graphql-redis-subscriptions": "catalog:",
+    "graphql-subscriptions": "catalog:",
+    "ioredis": "catalog:",
+    "pg": "catalog:",
+    "sharp": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/tooling": "workspace:*",
+    "@types/archiver": "catalog:",
+    "@types/pg": "catalog:",
+    "drizzle-kit": "catalog:",
+    "oxlint": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

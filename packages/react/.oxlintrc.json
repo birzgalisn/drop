@@ -1,0 +1,4 @@
+{
+  "extends": ["../tooling/oxlint/react-internal.json"],
+  "ignorePatterns": ["dist/**", "**/*.generated.ts", "**/_generated/**", "**/vendor/**"]
+}

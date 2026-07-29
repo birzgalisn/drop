@@ -1,0 +1,9 @@
+query StorageCapacity {
+  storageCapacity {
+    totalBytes
+    usedBytes
+    availableBytes
+    reserveBytes
+    uploadAllowed
+  }
+}

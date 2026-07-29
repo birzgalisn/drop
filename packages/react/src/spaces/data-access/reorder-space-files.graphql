@@ -1,0 +1,5 @@
+mutation ReorderSpaceFiles($input: ReorderSpaceFilesInput!) {
+  reorderSpaceFiles(input: $input) {
+    ...SpaceFields
+  }
+}

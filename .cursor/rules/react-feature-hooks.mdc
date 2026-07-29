@@ -1,0 +1,64 @@
+---
+description: Plain React components, props over context, small hooks
+globs:
+  - packages/react/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# React components and hooks
+
+Keep it boring. A reader should understand a component without opening three other files.
+
+## Props over context
+
+Pass data down as props. Do **not** reach for context because a tree is three levels deep — that is what props are for.
+
+Context is justified only when a consumer cannot receive props at all: it renders in a portal outside the tree, or lives under an unrelated route. Today nothing in this app qualifies. State that must outlive the React tree (in-flight uploads) lives in the module-scoped Zustand store in `spaces/util/upload-space-files-tus.ts`.
+
+If you do add a context, one context with both state and handlers is fine. Do not split state/actions "for re-renders" without a measured problem.
+
+## No compound components
+
+Do not attach static children (`Parent.Child = Child`). Do not require `children` for structure. A component owns its own layout and renders it.
+
+Routes in `apps/web` pass props and nothing more — no reassembling a feature out of twenty pieces at the call site. If a route needs a variant, add a prop.
+
+## Layers
+
+| Dir | Holds |
+| --- | ----- |
+| `feature/` | The component that owns the data hooks and composes the surface |
+| `ui/` | Presentational components — props only, no data fetching |
+| `hooks/` | React hooks (query, subscription, local state) |
+| `util/` | Pure functions and the Zustand store |
+| `data-access/` | GraphQL documents and generated types |
+
+Apollo, tus, and validation belong in `hooks/` or `util/`, not inline in a component body.
+
+## Small hooks and named functions
+
+One hook, one concern — files/uploads, live updates, unlock, share form. A hook over ~80 lines is a smell: pull the orchestration out into named plain functions in `util/` that take their dependencies as arguments, and let the hook wire them together.
+
+Anti-patterns:
+
+- One mega-`use*Session` that hides a whole feature
+- One-liner wrappers with no reusable boundary
+- Deeply nested inline callbacks instead of named functions
+
+## Effects
+
+`useEffect` is for synchronizing with **external systems**: DOM listeners, timers, third-party widgets, imperative APIs like Mantine `notifications`. That is a legitimate use — do not contort code to avoid it.
+
+Do **not** use it for:
+
+- Deriving values that can be computed in render
+- Resetting state when a prop changes — adjust during render, or remount with `key`
+
+Never perform a side effect during render (calling a mutation, navigating, invoking a callback prop behind a `useRef` latch). It breaks under StrictMode and concurrent rendering. Use an effect, or an event handler.
+
+## Style
+
+React Compiler is enabled — do not hand-wrap handlers or derived values in `useCallback` / `useMemo` for referential stability.
+
+Components are named `function`s (`function SpaceWizard() { … }`). Helpers declared inside a component are arrow functions (`const handleHome = () => { … }`).

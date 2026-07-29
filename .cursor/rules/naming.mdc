@@ -1,0 +1,13 @@
+---
+description: Product vs domain naming
+globs:
+alwaysApply: true
+---
+
+# Naming
+
+- **Drop** = product / app name only.
+- **Space** = domain container (`spaces`, `space_files`, `SpaceWizard`, `UploadType.SpaceFile`).
+- **Folder** = optional nested dir inside a space (future; not a separate product noun).
+- **Dropzone** = Mantine UI control (not the domain).
+- Avoid `drops`, `dropId`, `drop_file`, `inbox` as product domains.

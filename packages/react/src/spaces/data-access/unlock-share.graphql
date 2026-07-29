@@ -1,0 +1,5 @@
+mutation UnlockShare($token: String!, $pin: String!) {
+  unlockShare(token: $token, pin: $pin) {
+    ok
+  }
+}

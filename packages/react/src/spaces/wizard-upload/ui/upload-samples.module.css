@@ -1,0 +1,113 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin-inline: auto;
+  padding: 0.35rem 0.75rem 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--mantine-color-dimmed);
+  transition:
+    color 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.root:hover:not(:disabled) {
+  color: var(--mantine-color-text);
+}
+
+.root:hover:not(:disabled) .fan {
+  transform: translateY(-2px);
+}
+
+.root:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--mantine-color-sand-5);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.arrow {
+  display: flex;
+  line-height: 0;
+  opacity: 0.7;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.root:hover:not(:disabled) .arrow {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.fan {
+  position: relative;
+  width: 17.5rem;
+  height: 6.25rem;
+  transition: transform 180ms ease;
+}
+
+.thumb {
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  width: 5rem;
+  height: 5rem;
+  margin-left: -2.5rem;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--drop-surface, var(--mantine-color-body));
+  border: 1px solid var(--drop-border, var(--mantine-color-default-border));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+  transition: transform 180ms ease;
+}
+
+.thumbLeft {
+  transform: translateX(-4.8rem) translateY(0.4rem) rotate(-12deg);
+  z-index: 1;
+}
+
+.thumbCenter {
+  transform: translateY(0);
+  z-index: 2;
+}
+
+.thumbRight {
+  transform: translateX(4.8rem) translateY(0.4rem) rotate(12deg);
+  z-index: 3;
+}
+
+.root:hover:not(:disabled) .thumbLeft {
+  transform: translateX(-5.1rem) translateY(0.4rem) rotate(-14deg);
+}
+
+.root:hover:not(:disabled) .thumbRight {
+  transform: translateX(5.1rem) translateY(0.4rem) rotate(14deg);
+}
+
+.label {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .arrow,
+  .fan,
+  .thumb {
+    transition: none;
+  }
+
+  .root:hover:not(:disabled) .fan,
+  .root:hover:not(:disabled) .arrow {
+    transform: none;
+  }
+}

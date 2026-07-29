@@ -1,0 +1,15 @@
+---
+description: Single /files tus endpoint and UploadType registry
+globs:
+  - packages/nest/src/tus/**
+  - packages/nest/src/**/tus/**
+alwaysApply: false
+---
+
+# Tus uploads
+
+- One mount: `/files` (`TusConfig.PATH`).
+- Client metadata must include shared enum `UploadType` (never ad-hoc strings).
+- `TusHandlerRegistry` maps `UploadType` → `{ onUploadCreate, onUploadFinish }`.
+- On create: `ensureDiskHeadroomFor`, validate domain row; on finish: claim + `promote` (idempotent).
+- Adding a kind = new `UploadType` member in `@repo/shared` (`uploads/enums/`) + register handler.

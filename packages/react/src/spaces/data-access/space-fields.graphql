@@ -1,0 +1,30 @@
+fragment SpaceFileFields on SpaceFile {
+  id
+  spaceId
+  originalName
+  mimeType
+  byteSize
+  sortOrder
+  status
+  thumbKey
+  previewKey
+  createdAt
+}
+
+fragment SpaceFields on Space {
+  id
+  status
+  createdAt
+  updatedAt
+  isAuthor
+  share {
+    id
+    spaceId
+    token
+    expiresAt
+    createdAt
+  }
+  files {
+    ...SpaceFileFields
+  }
+}

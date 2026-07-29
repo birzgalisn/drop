@@ -1,0 +1,179 @@
+name: ${PROJECT}
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+
+networks:
+  internal:
+  proxy:
+    external: true
+    name: drop_edge
+
+services:
+  postgres:
+    profiles: [dev, preview]
+    image: postgres:18.4-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - PGDATA=/var/lib/postgresql
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - internal
+    healthcheck:
+      test: [CMD, pg_isready, -U, "${POSTGRES_USER}", -d, "${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    profiles: [dev, preview]
+    image: redis:8.8-alpine
+    command:
+      - /bin/sh
+      - -c
+      - redis-server --save 60 1 --loglevel warning --requirepass "$$REDISCLI_AUTH" --protected-mode yes
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  media-provision:
+    profiles: [dev, preview]
+    image: busybox:1.38
+    user: root
+    volumes:
+      - media_data:/drop-media
+    command: chown -R 1000:1000 /drop-media
+
+  pnpm-init: &node
+    profiles: [dev]
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    image: drop-node:24.18
+    env_file:
+      - .env.local
+    environment:
+      HOME: /app/.pnpm-home
+      CI: true
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: pnpm install
+    networks:
+      - internal
+
+  turbo:
+    <<: *node
+    profiles: [dev]
+    volumes:
+      - .:/app
+      - media_data:/drop-media
+    command: pnpm run dev
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${PROJECT}-api.rule=Host(`api.${APEX}`)
+      - traefik.http.routers.${PROJECT}-api.entrypoints=http
+      - traefik.http.routers.${PROJECT}-api.service=${PROJECT}-api
+      - traefik.http.services.${PROJECT}-api.loadbalancer.server.port=3000
+      - traefik.http.routers.${PROJECT}-web.rule=Host(`app.${APEX}`)
+      - traefik.http.routers.${PROJECT}-web.entrypoints=http
+      - traefik.http.routers.${PROJECT}-web.service=${PROJECT}-web
+      - traefik.http.services.${PROJECT}-web.loadbalancer.server.port=4000
+      - traefik.http.middlewares.${PROJECT}-studio-openui.redirectregex.regex=^https?://.*
+      - traefik.http.middlewares.${PROJECT}-studio-openui.redirectregex.replacement=https://local.drizzle.studio/?host=studio.${APEX}&port=80
+      - traefik.http.routers.${PROJECT}-studio-openui.rule=Host(`studio.${APEX}`) && Method(`GET`) && Path(`/`)
+      - traefik.http.routers.${PROJECT}-studio-openui.entrypoints=http
+      - traefik.http.routers.${PROJECT}-studio-openui.service=noop@internal
+      - traefik.http.routers.${PROJECT}-studio-openui.middlewares=${PROJECT}-studio-openui@docker
+      - traefik.http.routers.${PROJECT}-studio-openui.priority=100
+      - traefik.http.routers.${PROJECT}-studio.rule=Host(`studio.${APEX}`)
+      - traefik.http.routers.${PROJECT}-studio.entrypoints=http
+      - traefik.http.routers.${PROJECT}-studio.priority=1
+      - traefik.http.routers.${PROJECT}-studio.service=${PROJECT}-studio
+      - traefik.http.services.${PROJECT}-studio.loadbalancer.server.port=4983
+    networks:
+      - internal
+      - proxy
+    depends_on:
+      media-provision:
+        condition: service_completed_successfully
+      pnpm-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+
+  api:
+    profiles: [preview]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - API_BASE_URL=${API_BASE_URL}
+      - APEX=${APEX}
+    volumes:
+      - media_data:/drop-media
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${PROJECT}-api.rule=Host(`api.${APEX}`)
+      - traefik.http.routers.${PROJECT}-api.entrypoints=http
+      - traefik.http.routers.${PROJECT}-api.service=${PROJECT}-api
+      - traefik.http.services.${PROJECT}-api.loadbalancer.server.port=3000
+    networks:
+      - internal
+      - proxy
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:3000/up]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      media-provision:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    profiles: [preview]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${PROJECT}-web.rule=Host(`app.${APEX}`)
+      - traefik.http.routers.${PROJECT}-web.entrypoints=http
+      - traefik.http.routers.${PROJECT}-web.service=${PROJECT}-web
+      - traefik.http.services.${PROJECT}-web.loadbalancer.server.port=80
+    networks:
+      - proxy
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1/up]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      api:
+        condition: service_healthy

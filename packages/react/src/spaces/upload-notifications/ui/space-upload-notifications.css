@@ -1,0 +1,80 @@
+/*
+ * Bottom-anchored toasts grow upward. Cap the toast to the viewport and keep
+ * the file list as the only scrollport — sized so it never gets clipped by the
+ * toast's own max-height (which made the scrollbar visible while the list box
+ * overflowed the card).
+ */
+.drop-upload-toast {
+  --drop-upload-toast-max-height: calc(100dvh - 2rem);
+  /* Padding + header row + gaps; leave this much room under the toast cap. */
+  --drop-upload-toast-chrome: 5.5rem;
+  --drop-upload-toast-files-max-height: 240px;
+
+  box-sizing: border-box;
+  padding-block: 1rem !important;
+  padding-inline: 1rem !important;
+  max-height: var(--drop-upload-toast-max-height);
+  overflow: hidden;
+  align-items: flex-start;
+}
+
+.drop-upload-toast .mantine-Notification-body {
+  flex: 1 1 auto;
+  align-self: stretch;
+  margin-top: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+ * Mantine's description uses text-overflow: ellipsis, which breaks block scroll
+ * children. Make it a flex column that can host the scrolling list.
+ */
+.drop-upload-toast .mantine-Notification-description {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  text-overflow: unset;
+  display: flex;
+  flex-direction: column;
+}
+
+.drop-upload-toast .mantine-Notification-closeButton {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.drop-upload-toast-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.drop-upload-toast-header {
+  flex: 0 0 auto;
+}
+
+.drop-upload-toast-files {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: min(
+    var(--drop-upload-toast-files-max-height),
+    calc(var(--drop-upload-toast-max-height) - var(--drop-upload-toast-chrome))
+  );
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.25rem;
+}
+
+/* Soften sparse tus progress jumps between network ticks. */
+.drop-upload-toast-progress .mantine-Progress-section {
+  transition: width 280ms linear;
+}

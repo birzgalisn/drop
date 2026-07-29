@@ -1,0 +1,33 @@
+name: drop-edge
+
+networks:
+  edge:
+    name: drop_edge
+
+services:
+  traefik:
+    image: traefik:3.7
+    command:
+      - --ping=true
+      - --api.dashboard=true
+      - --entrypoints.http.address=:80
+      - --providers.docker=true
+      - --providers.docker.network=drop_edge
+      - --providers.docker.exposedbydefault=false
+    ports:
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.localhost`)
+      - traefik.http.routers.traefik.entrypoints=http
+      - traefik.http.routers.traefik.service=api@internal
+    networks:
+      - edge
+    healthcheck:
+      test: [CMD, traefik, healthcheck, --ping]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped

@@ -1,0 +1,36 @@
+# VCS / CI / local tooling (not needed for turbo prune + build)
+.git
+.devops
+.github
+.vscode
+.idea
+.turbo
+.vercel
+.cursor
+
+# Local pnpm caches (compose sets HOME=/app/.pnpm-home)
+.pnpm-home
+.pnpm-store
+
+# Host install / build / prune outputs (recreated in the image)
+out
+**/node_modules
+**/dist
+**/.tanstack
+**/*.tsbuildinfo
+
+# Secrets and local env (build-args / compose env_file instead)
+.env*
+
+# Tests / coverage / logs / OS junk
+coverage
+.nyc_output
+test-results
+playwright-report
+playwright/.cache
+blob-report
+**/*.log
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+*.pem

@@ -1,0 +1,131 @@
+packages:
+  - 'apps/*'
+  - 'packages/tooling'
+  - 'packages/nest'
+  - 'packages/react'
+  - 'packages/shared'
+
+injectWorkspacePackages: true
+
+engineStrict: true
+strictPeerDependencies: false
+
+# Explicit pnpm 11 supply-chain defaults (already true by default; kept visible)
+minimumReleaseAge: 1440
+blockExoticSubdeps: true
+strictDepBuilds: true
+
+supportedArchitectures:
+  os:
+    - current
+    - linux
+  cpu:
+    - current
+    - x64
+  libc:
+    - current
+    - glibc
+
+allowBuilds:
+  '@apollo/protobufjs': true
+  '@nestjs/core': true
+  '@parcel/watcher': true
+  '@swc/core': true
+  sharp: true
+  core-js: false
+  esbuild: true
+  msgpackr-extract: true
+  unrs-resolver: true
+
+catalog:
+  '@apollo/client': ^4.2.7
+  '@apollo/server': ^5.5.1
+  '@as-integrations/fastify': ^3.1.0
+  '@fastify/cookie': ^11.0.2
+  '@fastify/static': ^9.3.0
+  '@graphql-codegen/cli': ^7.2.0
+  '@graphql-codegen/near-operation-file-preset': ^5.2.1
+  '@graphql-codegen/typed-document-node': ^7.1.0
+  '@graphql-codegen/typescript': ^6.1.0
+  '@graphql-codegen/typescript-operations': ^6.1.0
+  '@graphql-typed-document-node/core': ^3.2.0
+  '@img/sharp-libvips-linux-x64': 1.3.2
+  '@img/sharp-linux-x64': 0.35.3
+  '@jest/globals': ^30.4.1
+  '@jest/types': ^30.4.1
+  '@mantine/core': ^9.4.1
+  '@mantine/dropzone': ^9.4.1
+  '@mantine/form': ^9.4.1
+  '@mantine/hooks': ^9.4.1
+  '@mantine/notifications': ^9.4.1
+  '@nestjs/apollo': ^13.4.2
+  '@nestjs/bullmq': ^11.0.4
+  '@nestjs/cli': ^11.0.24
+  '@nestjs/common': ^11.1.28
+  '@nestjs/config': ^4.0.4
+  '@nestjs/core': ^11.1.28
+  '@nestjs/graphql': ^13.4.2
+  '@nestjs/platform-fastify': ^11.1.28
+  '@nestjs/schedule': ^6.0.0
+  '@nestjs/schematics': ^11.1.0
+  '@nestjs/testing': ^11.1.28
+  '@parcel/watcher': ^2.5.6
+  '@phosphor-icons/react': ^2.1.10
+  '@rolldown/binding-linux-x64-gnu': 1.2.0
+  '@rolldown/binding-linux-x64-musl': 1.2.0
+  '@rolldown/plugin-babel': ^0.2.3
+  '@rspack/binding-linux-x64-gnu': 2.1.4
+  '@rspack/binding-linux-x64-musl': 2.1.4
+  '@rspack/cli': ^2.1.4
+  '@rspack/core': ^2.1.4
+  '@rspack/dev-server': ^2.1.0
+  '@swc/core': ^1.15.43
+  '@swc/jest': ^0.2.39
+  '@tanstack/react-router': ^1.170.18
+  '@tanstack/router-cli': ^1.167.21
+  '@tanstack/router-plugin': ^1.168.22
+  '@tus/file-store': ^2.1.0
+  '@tus/server': ^2.4.1
+  '@types/archiver': ^6.0.3
+  '@types/node': ^26.1.1
+  '@types/pg': ^8.20.0
+  '@types/react': ^19.2.17
+  '@types/react-dom': ^19.2.3
+  '@vitejs/plugin-react': ^6.0.3
+  archiver: ^7.0.1
+  babel-plugin-react-compiler: ^1.0.0
+  bullmq: ^5.80.8
+  clsx: ^2.1.1
+  dotenv: ^17.4.2
+  drizzle-kit: ^0.31.10
+  drizzle-orm: ^0.45.2
+  eslint-plugin-turbo: ^2.10.5
+  fastify: ^5.10.0
+  graphql: ^16.14.2
+  graphql-config: ^5.1.6
+  graphql-redis-subscriptions: ^2.7.0
+  graphql-subscriptions: ^3.0.0
+  graphql-ws: ^6.0.8
+  ioredis: ^5.11.1
+  jest: ^30.4.2
+  oxfmt: ^0.59.0
+  oxlint: ^1.74.0
+  pg: ^8.22.0
+  postcss: ^8.5.19
+  postcss-preset-mantine: ^1.18.0
+  postcss-simple-vars: ^7.0.1
+  react: ^19.2.7
+  react-dom: ^19.2.7
+  reflect-metadata: ^0.2.2
+  run-script-webpack-plugin: ^0.2.3
+  rxjs: ^7.8.2
+  sharp: ^0.35.3
+  ts-node: ^10.9.2
+  tsconfig-paths: ^4.2.0
+  tsdown: ^0.22.9
+  turbo: ^2.10.5
+  tus-js-client: ^4.3.1
+  typescript: ^7.0.2
+  vite: ^8.1.5
+  zod: ^4.4.3
+  zustand: ^5.0.8

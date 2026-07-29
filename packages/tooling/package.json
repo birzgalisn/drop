@@ -1,0 +1,49 @@
+{
+  "name": "@repo/tooling",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "dist",
+    "jest",
+    "typescript",
+    "oxlint",
+    "postcss"
+  ],
+  "exports": {
+    "./typescript/base.json": "./typescript/base.json",
+    "./typescript/nest.json": "./typescript/nest.json",
+    "./typescript/react-library.json": "./typescript/react-library.json",
+    "./oxlint/base": "./oxlint/base.json",
+    "./oxlint/library": "./oxlint/library.json",
+    "./oxlint/nest": "./oxlint/nest.json",
+    "./oxlint/react-internal": "./oxlint/react-internal.json",
+    "./jest": {
+      "types": "./jest/index.ts",
+      "@repo": "./jest/index.ts",
+      "development": "./jest/index.ts",
+      "default": "./jest/index.ts"
+    },
+    "./postcss/mantine": "./postcss/mantine.mjs"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "generate": "pnpm -w exec graphql-codegen --config graphql.config.ts",
+    "dev": "pnpm -w exec graphql-codegen --config graphql.config.ts --watch",
+    "check-types": "tsc --noEmit",
+    "lint": "oxlint .",
+    "clean": "rm -rf .turbo dist node_modules tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "postcss-preset-mantine": "catalog:",
+    "postcss-simple-vars": "catalog:"
+  },
+  "devDependencies": {
+    "@jest/types": "catalog:",
+    "@types/node": "catalog:",
+    "jest": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

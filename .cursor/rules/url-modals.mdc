@@ -1,0 +1,13 @@
+---
+description: URL-driven wizard and modals
+globs:
+  - apps/web/**
+  - packages/react/**
+alwaysApply: false
+---
+
+# URL UI state
+
+Wizard steps and modals are **TanStack Router paths** (Relay-style), not modal-only React state — reload-safe and shareable.
+
+Examples: `/`, `/spaces/new/review`, `/spaces/new/share`, `/s/$token`.

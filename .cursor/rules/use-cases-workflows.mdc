@@ -1,0 +1,15 @@
+---
+description: Use-cases vs workflows
+globs:
+  - packages/nest/**
+alwaysApply: false
+---
+
+# Use-cases and workflows
+
+- **Use-case**: one injectable, one verb, `execute(input, db?)` (or `execute(db?)` when there is no input), **full Drizzle SQL inline**. Size ≈ one repository method. No unrelated side effects.
+- Optional positional `db?: DrizzleClient` — caller-owned tx or omit to use module db via `this.drizzle.client(db)`.
+- **Workflow**: injectable orchestration — sequences use-cases + promote/thumbs/PIN hash/pubsub.
+- Workflows that compose multiple DB steps open **one** `this.drizzle.db.transaction`, pass `tx` into every use-case inside, and run queue/pubsub **after commit**.
+- Resolvers and tus hooks call **workflows** (or a single use-case when truly one verb).
+- Do not collapse use-cases into static DB helper classes.
