@@ -28,6 +28,10 @@
       "dependsOn": ["^build", "generate"],
       "outputs": ["dist/**"]
     },
+    "web#build": {
+      "dependsOn": ["^build", "generate", "@repo/tooling#generate"],
+      "outputs": ["dist/**"]
+    },
     "@repo/tooling#build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]

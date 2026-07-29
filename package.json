@@ -17,16 +17,8 @@
     "db:studio": "pnpm --filter=@repo/nest db:studio"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "catalog:",
-    "@graphql-codegen/near-operation-file-preset": "catalog:",
-    "@graphql-codegen/typed-document-node": "catalog:",
-    "@graphql-codegen/typescript": "catalog:",
-    "@graphql-codegen/typescript-operations": "catalog:",
-    "@parcel/watcher": "catalog:",
     "@repo/tooling": "workspace:*",
     "eslint-plugin-turbo": "catalog:",
-    "graphql": "catalog:",
-    "graphql-config": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "turbo": "catalog:"

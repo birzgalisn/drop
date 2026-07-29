@@ -5,7 +5,8 @@ packages:
   - 'packages/react'
   - 'packages/shared'
 
-injectWorkspacePackages: true
+injectWorkspacePackages: false
+forceLegacyDeploy: true
 
 engineStrict: true
 strictPeerDependencies: false

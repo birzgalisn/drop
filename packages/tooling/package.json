@@ -27,8 +27,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "generate": "pnpm -w exec graphql-codegen --config graphql.config.ts",
-    "dev": "pnpm -w exec graphql-codegen --config graphql.config.ts --watch",
+    "generate": "graphql-codegen --config graphql.config.mjs",
+    "dev": "graphql-codegen --config graphql.config.mjs --watch",
     "check-types": "tsc --noEmit",
     "lint": "oxlint .",
     "clean": "rm -rf .turbo dist node_modules tsconfig.tsbuildinfo"
@@ -38,8 +38,15 @@
     "postcss-simple-vars": "catalog:"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "catalog:",
+    "@graphql-codegen/near-operation-file-preset": "catalog:",
+    "@graphql-codegen/typed-document-node": "catalog:",
+    "@graphql-codegen/typescript": "catalog:",
+    "@graphql-codegen/typescript-operations": "catalog:",
     "@jest/types": "catalog:",
+    "@parcel/watcher": "catalog:",
     "@types/node": "catalog:",
+    "graphql": "catalog:",
     "jest": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
