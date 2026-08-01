@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AppError } from '@repo/shared';
 
 import type { UseCase } from '../../common';
 import { type DrizzleClient, DrizzleService, shares } from '../../drizzle';
@@ -27,6 +28,10 @@ export class InsertShareUseCase implements UseCase<InsertShareInput, ShareRow> {
         expiresAt: input.expiresAt,
       })
       .returning();
+
+    if (!row) {
+      throw AppError.internal('Failed to create share');
+    }
 
     return row;
   }

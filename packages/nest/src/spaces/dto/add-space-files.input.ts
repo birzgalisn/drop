@@ -3,13 +3,13 @@ import { Field, ID, InputType, Int } from '@nestjs/graphql';
 @InputType()
 export class AddSpaceFileInput {
   @Field()
-  originalName: string;
+  originalName!: string;
 
   @Field()
-  mimeType: string;
+  mimeType!: string;
 
   @Field(() => Int)
-  byteSize: number;
+  byteSize!: number;
 }
 
 @InputType()
@@ -19,5 +19,5 @@ export class AddSpaceFilesInput {
   spaceId?: string;
 
   @Field(() => [AddSpaceFileInput])
-  files: AddSpaceFileInput[];
+  files!: AddSpaceFileInput[];
 }

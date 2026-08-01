@@ -7,20 +7,20 @@ import { Field, GraphQLISODateTime, ID, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class Share {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => ID)
-  spaceId: string;
+  spaceId!: string;
 
   @Field()
-  token: string;
+  token!: string;
 
   @Field(() => GraphQLISODateTime)
-  expiresAt: Date;
+  expiresAt!: Date;
 
   @Field(() => GraphQLISODateTime)
-  createdAt: Date;
+  createdAt!: Date;
 
   /** Internal — used by unlock paths; not in the schema. */
-  pinHash: string;
+  pinHash!: string;
 }

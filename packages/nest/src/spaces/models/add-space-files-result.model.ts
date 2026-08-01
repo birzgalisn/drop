@@ -7,8 +7,8 @@ import { Space } from './space.model';
 @ObjectType()
 export class AddSpaceFilesResult {
   @Field(() => Space)
-  space: Space;
+  space!: Space;
 
   @Field(() => [SpaceFile])
-  files: SpaceFile[];
+  files!: SpaceFile[];
 }

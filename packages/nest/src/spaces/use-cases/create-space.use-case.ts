@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AppError } from '@repo/shared';
 
 import type { UseCase } from '../../common';
 import { type DrizzleClient, DrizzleService, spaces, SpaceStatus } from '../../drizzle';
@@ -24,6 +25,10 @@ export class CreateSpaceUseCase implements UseCase<CreateSpaceInput, SpaceRow> {
         status: SpaceStatus.DRAFT,
       })
       .returning();
+
+    if (!row) {
+      throw AppError.internal('Failed to create space');
+    }
 
     return row;
   }

@@ -3,17 +3,17 @@ import { Field, ID, InputType, Int } from '@nestjs/graphql';
 @InputType()
 export class ReorderSpaceFileEntryInput {
   @Field(() => ID)
-  fileId: string;
+  fileId!: string;
 
   @Field(() => Int)
-  sortOrder: number;
+  sortOrder!: number;
 }
 
 @InputType()
 export class ReorderSpaceFilesInput {
   @Field(() => ID)
-  spaceId: string;
+  spaceId!: string;
 
   @Field(() => [ReorderSpaceFileEntryInput])
-  files: ReorderSpaceFileEntryInput[];
+  files!: ReorderSpaceFileEntryInput[];
 }

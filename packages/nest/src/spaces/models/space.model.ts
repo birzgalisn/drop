@@ -22,16 +22,16 @@ import { SpaceFile } from './space-file.model';
 @ObjectType()
 export class Space {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => SpaceStatus)
-  status: SpaceStatus;
+  status!: SpaceStatus;
 
   @Field(() => GraphQLISODateTime)
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => GraphQLISODateTime)
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Field(() => [SpaceFile], { nullable: true })
   files?: SpaceFile[];
@@ -43,7 +43,7 @@ export class Space {
   isAuthor?: boolean;
 
   /** Internal — compared to the author cookie; not in the schema. */
-  authorKey: string;
+  authorKey!: string;
 }
 
 @Resolver(Space)

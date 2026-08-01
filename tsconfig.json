@@ -1,6 +1,3 @@
 {
-  "extends": "@repo/tooling/typescript/base.json",
-  "compilerOptions": {
-    "strictNullChecks": true
-  }
+  "extends": "@repo/tooling/typescript/base.json"
 }

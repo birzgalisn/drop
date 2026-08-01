@@ -8,5 +8,5 @@ import { Field, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class UnlockShareResult {
   @Field()
-  ok: boolean;
+  ok!: boolean;
 }

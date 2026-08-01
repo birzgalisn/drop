@@ -10,25 +10,25 @@ import { SpaceFileStatus } from '../enums/space-file-status.enum';
 @ObjectType()
 export class SpaceFile {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => ID)
-  spaceId: string;
+  spaceId!: string;
 
   @Field()
-  originalName: string;
+  originalName!: string;
 
   @Field()
-  mimeType: string;
+  mimeType!: string;
 
   @Field(() => Int)
-  byteSize: number;
+  byteSize!: number;
 
   @Field(() => Int)
-  sortOrder: number;
+  sortOrder!: number;
 
   @Field(() => SpaceFileStatus)
-  status: SpaceFileStatus;
+  status!: SpaceFileStatus;
 
   /** Internal — used by download routes; not in the schema. */
   storageKey?: string | null;
@@ -40,5 +40,5 @@ export class SpaceFile {
   previewKey?: string | null;
 
   @Field(() => GraphQLISODateTime)
-  createdAt: Date;
+  createdAt!: Date;
 }

@@ -1,7 +1,6 @@
 {
   "extends": "@repo/tooling/typescript/react-library.json",
   "compilerOptions": {
-    "strictNullChecks": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,

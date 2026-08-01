@@ -109,13 +109,10 @@ export class RspackConfig {
       }
 
       // Absolute path into node_modules (common with pnpm) — externalize by package name.
-      const fromNodeModules = request.match(
-        /node_modules\/(?:\.pnpm\/[^/]+\/node_modules\/)?((?:@[^/]+\/)?[^/]+)/,
-      );
+      const [, pkg] =
+        request.match(/node_modules\/(?:\.pnpm\/[^/]+\/node_modules\/)?((?:@[^/]+\/)?[^/]+)/) ?? [];
 
-      if (fromNodeModules) {
-        const pkg = fromNodeModules[1];
-
+      if (pkg) {
         if (pkg.startsWith('@repo/')) {
           callback();
           return;
