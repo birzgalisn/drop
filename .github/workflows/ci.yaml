@@ -94,6 +94,7 @@ jobs:
           file: apps/${{ inputs.app }}/Dockerfile
           build-args: ${{ inputs.build-args }}
           push: true
+          provenance: false
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=gha
