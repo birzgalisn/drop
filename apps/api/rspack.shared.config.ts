@@ -78,7 +78,9 @@ export class RspackConfig {
    * Bundle only app + `@repo/*` sources. Everything else (esp. `pg` under pnpm) must stay
    * external — bundling `pg` breaks EventEmitter/`stream.on` at runtime.
    */
-  static getExternals({ allowHmrPoll = false }: { allowHmrPoll?: boolean } = {}): Configuration['externals'] {
+  static getExternals({
+    allowHmrPoll = false,
+  }: { allowHmrPoll?: boolean } = {}): Configuration['externals'] {
     const packageExternal: ExternalItem = ({ request }, callback) => {
       if (!request) {
         callback();
