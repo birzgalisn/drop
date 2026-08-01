@@ -58,7 +58,7 @@ services:
         delay: 2s
       labels:
         - traefik.enable=true
-        - traefik.http.middlewares.${PROJECT}-apex.redirectregex.regex=^https?://[^/]+(.*)$
+        - traefik.http.middlewares.${PROJECT}-apex.redirectregex.regex=^https?://[^/]+(.*)$$
         - traefik.http.middlewares.${PROJECT}-apex.redirectregex.replacement=https://app.${APEX}$${1}
         - traefik.http.middlewares.${PROJECT}-apex.redirectregex.permanent=true
         - traefik.http.routers.${PROJECT}-apex.rule=Host(`${APEX}`)
