@@ -79,3 +79,7 @@ jobs:
           docker service update --detach=false \
             --image "${IMAGE_ROOT}-${app}:${IMAGE_TAG}" \
             "drop_app_${app}"
+
+          # Untagged layers left when :main moves; stopped Swarm task containers.
+          docker image prune -f
+          docker container prune -f
