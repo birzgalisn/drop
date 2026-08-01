@@ -10,7 +10,7 @@
     "dev": "NODE_ENV=development rspack dev",
     "dev:debug": "NODE_ENV=development NODE_OPTIONS=--inspect rspack dev",
     "build": "NODE_ENV=production rspack build",
-    "generate:schema": "rspack build --config rspack.schema.config.mjs && node dist/write-graphql-schema.js",
+    "generate:schema": "rspack build --config rspack.schema.config.ts && node dist/write-graphql-schema.js",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist node_modules .turbo coverage src/_generated tsconfig.tsbuildinfo",
     "start": "node dist/main.js",

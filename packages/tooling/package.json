@@ -23,12 +23,12 @@
       "development": "./jest/index.ts",
       "default": "./jest/index.ts"
     },
-    "./postcss/mantine": "./postcss/mantine.mjs"
+    "./postcss/mantine": "./postcss/mantine.ts"
   },
   "scripts": {
     "build": "tsdown",
-    "generate": "graphql-codegen --config graphql.config.mjs",
-    "dev": "graphql-codegen --config graphql.config.mjs --watch",
+    "generate": "graphql-codegen --config graphql.config.ts",
+    "dev": "graphql-codegen --config graphql.config.ts --watch",
     "check-types": "tsc --noEmit",
     "lint": "oxlint .",
     "clean": "rm -rf .turbo dist node_modules tsconfig.tsbuildinfo"

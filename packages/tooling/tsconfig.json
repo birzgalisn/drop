@@ -2,7 +2,9 @@
   "extends": "./typescript/base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "jest"
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler"
   },
-  "include": ["jest"]
+  "include": ["jest", "postcss", "*.config.ts"]
 }

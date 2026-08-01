@@ -1,8 +1,7 @@
 {
   "extends": "@repo/tooling/typescript/nest.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
+    "outDir": "dist"
   },
-  "include": ["src"]
+  "include": ["src", "*.config.ts"]
 }

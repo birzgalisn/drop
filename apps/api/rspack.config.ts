@@ -1,9 +1,7 @@
-// @ts-check
-
 import { defineConfig } from '@rspack/cli';
 import { RunScriptWebpackPlugin } from 'run-script-webpack-plugin';
 
-import { RspackConfig } from './rspack.shared.mjs';
+import { RspackConfig } from './rspack.shared.config';
 
 export default defineConfig({
   context: RspackConfig.dirname,

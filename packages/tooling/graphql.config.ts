@@ -1,13 +1,13 @@
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const configDir = path.dirname(fileURLToPath(import.meta.url));
+import type { CodegenConfig } from '@graphql-codegen/cli';
+
+const configDir = import.meta.dirname;
 const reactSrc = path.resolve(configDir, '../react/src');
 const schema = path.resolve(configDir, '../../apps/api/src/_generated/schema.graphql');
 const reactGraphqlTypes = path.join(reactSrc, '_generated/graphql-types.ts');
 
-/** @type {import('@graphql-codegen/cli').CodegenConfig} */
-export default {
+const config: CodegenConfig = {
   schema,
   documents: path.join(reactSrc, '**/*.graphql'),
   ignoreNoDocuments: true,
@@ -35,3 +35,5 @@ export default {
     },
   },
 };
+
+export default config;

@@ -1,11 +1,11 @@
 import { defineConfig } from 'tsdown';
 
-const prodBuild = process.env.NODE_ENV === 'production';
+const isDev = process.env.NODE_ENV === 'development';
 
 export default defineConfig({
   clean: true,
   dts: true,
-  sourcemap: !prodBuild,
+  sourcemap: isDev,
   format: 'cjs',
   fixedExtension: false,
   platform: 'node',

@@ -1,8 +1,6 @@
-// @ts-check
-
 import { defineConfig } from '@rspack/cli';
 
-import { RspackConfig } from './rspack.shared.mjs';
+import { RspackConfig } from './rspack.shared.config';
 
 /** One-off bundle for `generate:schema` — not part of the production API build. */
 export default defineConfig({

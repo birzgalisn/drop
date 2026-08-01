@@ -1,13 +1,9 @@
-// @ts-check
-
 import { isAbsolute, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-import { rspack } from '@rspack/core';
+import type { Configuration } from '@rspack/cli';
+import { rspack, type ExternalItem } from '@rspack/core';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-
-/** @typedef {import('@rspack/cli').Configuration} Configuration */
+const __dirname = import.meta.dirname;
 
 export class RspackConfig {
   static dirname = __dirname;
@@ -16,22 +12,19 @@ export class RspackConfig {
 
   static isDev = process.env.NODE_ENV === 'development';
 
-  /** @returns {string} */
-  static getOutputPath() {
+  static getOutputPath(): string {
     return resolve(RspackConfig.dirname, 'dist');
   }
 
-  /** @returns {Configuration['resolve']} */
-  static getResolve() {
+  static getResolve(): Configuration['resolve'] {
     return {
-      extensions: ['...', '.ts', '.tsx', '.jsx'],
+      extensions: ['...', '.ts', '.tsx'],
       conditionNames: ['@repo', 'development', 'import', 'require', 'default'],
       modules: ['node_modules', resolve(RspackConfig.rootDir, 'node_modules')],
     };
   }
 
-  /** @returns {Configuration['module']} */
-  static getModule() {
+  static getModule(): Configuration['module'] {
     return {
       rules: [
         {
@@ -62,8 +55,7 @@ export class RspackConfig {
     };
   }
 
-  /** @returns {Configuration['optimization']} */
-  static getOptimization() {
+  static getOptimization(): Configuration['optimization'] {
     return {
       minimizer: [
         new rspack.SwcJsMinimizerRspackPlugin({
@@ -85,13 +77,9 @@ export class RspackConfig {
   /**
    * Bundle only app + `@repo/*` sources. Everything else (esp. `pg` under pnpm) must stay
    * external — bundling `pg` breaks EventEmitter/`stream.on` at runtime.
-   *
-   * @param {{ allowHmrPoll?: boolean }} [options]
-   * @returns {Configuration['externals']}
    */
-  static getExternals({ allowHmrPoll = false } = {}) {
-    /** @type {import('@rspack/core').ExternalItem} */
-    const packageExternal = ({ request }, callback) => {
+  static getExternals({ allowHmrPoll = false }: { allowHmrPoll?: boolean } = {}): Configuration['externals'] {
+    const packageExternal: ExternalItem = ({ request }, callback) => {
       if (!request) {
         callback();
         return;
@@ -140,19 +128,12 @@ export class RspackConfig {
     return [packageExternal];
   }
 
-  /**
-   * Optional `pg-native` is expected to be missing.
-   *
-   * @returns {Configuration['ignoreWarnings']}
-   */
-  static getIgnoreWarnings() {
+  /** Optional `pg-native` is expected to be missing. */
+  static getIgnoreWarnings(): Configuration['ignoreWarnings'] {
     return [/Can't resolve 'pg-native'/];
   }
 
-  /**
-   * @returns {NonNullable<Configuration['module']>['parser']}
-   */
-  static getParser() {
+  static getParser(): NonNullable<Configuration['module']>['parser'] {
     return {
       javascript: {
         exportsPresence: 'warn',
