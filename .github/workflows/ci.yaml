@@ -87,7 +87,6 @@ jobs:
           images: ${{ steps.meta.outputs.image }}
           tags: |
             type=ref,event=branch
-            type=sha,format=short
 
       - uses: docker/build-push-action@v7
         with:
