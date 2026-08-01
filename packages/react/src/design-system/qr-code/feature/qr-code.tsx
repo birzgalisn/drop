@@ -1,6 +1,6 @@
 import { Box } from '@mantine/core';
 
-import { encode } from '../vendor/uqr';
+import { encode } from 'uqr';
 
 const QR_SIZE_DEFAULT_PX = 112;
 const QR_PIXEL_SIZE = 4;
