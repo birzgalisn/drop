@@ -72,12 +72,12 @@ services:
         - traefik.http.routers.${PROJECT}-web.tls=true
         - traefik.http.routers.${PROJECT}-web.tls.certresolver=letsencrypt
         - traefik.http.routers.${PROJECT}-web.service=${PROJECT}-web
-        - traefik.http.services.${PROJECT}-web.loadbalancer.server.port=80
+        - traefik.http.services.${PROJECT}-web.loadbalancer.server.port=4000
         - traefik.http.services.${PROJECT}-web.loadbalancer.healthcheck.path=/up
         - traefik.http.services.${PROJECT}-web.loadbalancer.healthcheck.interval=10s
         - traefik.http.services.${PROJECT}-web.loadbalancer.healthcheck.timeout=3s
     healthcheck:
-      test: [CMD, wget, -q, --spider, http://127.0.0.1/up]
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:4000/up]
       interval: 10s
       timeout: 3s
       retries: 3
