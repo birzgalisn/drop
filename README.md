@@ -48,4 +48,4 @@ Migrations run automatically on turbo boot via `@repo/nest#db:deploy` (see `turb
 
 ## Production
 
-See [`.devops/README.md`](.devops/README.md) and [`.github/README.md`](.github/README.md).
+See [`.devops/README.md`](.devops/README.md) and [`.github/ACTIONS.md`](.github/ACTIONS.md).

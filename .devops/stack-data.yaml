@@ -10,7 +10,7 @@ services:
       - target: 5432
         published: 5432
         protocol: tcp
-        mode: host
+        mode: ingress
     volumes:
       - postgres_data:/var/lib/postgresql
     networks:
@@ -34,7 +34,7 @@ services:
         failure_action: rollback
 
   redis:
-    image: redis:8.8-alpine
+    image: redis:8.10-alpine
     command:
       - /bin/sh
       - -c

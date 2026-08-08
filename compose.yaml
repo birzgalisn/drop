@@ -32,7 +32,7 @@ services:
 
   redis:
     profiles: [dev, preview]
-    image: redis:8.8-alpine
+    image: redis:8.10-alpine
     command:
       - /bin/sh
       - -c

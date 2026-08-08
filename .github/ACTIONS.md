@@ -43,4 +43,4 @@ VPS prep (Docker Engine, `deploy` user, DNS) is still once on the box — see [`
 - `DATABASE_URL=postgresql://…@postgres:5432/…`
 - `REDIS_URL=redis://:…@redis:6379/0`
 
-**Migrate** SSHs to the VPS and forwards `localhost:5432` (Postgres is published on the host by `stack-data` for this tunnel). Keep `:5432` closed in UFW — see [`.devops/README.md`](../.devops/README.md).
+**Migrate** SSHs to the VPS and forwards `localhost:5432` (Postgres is ingress-published by `stack-data` for this tunnel). Public access is blocked by UFW/`DOCKER-USER` — do **not** `ufw route allow` `:5432`. See [`.devops/README.md`](../.devops/README.md).
