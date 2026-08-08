@@ -51,7 +51,7 @@ sudo -u deploy docker ps
 
 Default deny inbound. Public: SSH + HTTP/HTTPS only.
 
-Docker bypasses normal UFW for **ingress**-published ports (`:5432`, `:8080`). Wire `DOCKER-USER` into UFW (ufw-docker pattern), then allow SSH + Traefik **80/443** (`mode: host`). Do **not** `ufw route allow` 5432/8080 — migrate/dashboard via SSH tunnel to `127.0.0.1`.
+Docker bypasses normal UFW for published container ports. Wire `DOCKER-USER` into UFW (ufw-docker pattern), then allow public HTTP(S). Ingress ports **5432** / **8080** stay closed (no `ufw route allow`) — migrate/dashboard via SSH tunnel to `127.0.0.1`. Traefik **80/443** use Swarm `mode: host` but still traverse Docker’s forward path, so they need **both** `ufw allow` (INPUT) and `ufw route allow` (DOCKER-USER).
 
 **Append Docker rules** (skip if `BEGIN UFW AND DOCKER` is already in the file):
 
@@ -96,6 +96,13 @@ sudo ufw default allow outgoing
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
+```
+
+**Allow Docker-forwarded HTTP(S):**
+
+```bash
+sudo ufw route allow proto tcp from any to any port 80
+sudo ufw route allow proto tcp from any to any port 443
 ```
 
 **Enable:**
