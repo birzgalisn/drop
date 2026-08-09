@@ -2,7 +2,6 @@ import { ActionIcon, Group, Progress, Stack, Text } from '@mantine/core';
 import { TrashIcon } from '@phosphor-icons/react/Trash';
 import { Bytes } from '@repo/shared';
 
-import { useSmoothedValue } from '../../../common/hooks/use-smoothed-value';
 import type { SpaceUploadItem } from '../../util/upload-space-files-tus';
 import { uploadPercent } from '../util/upload-notification-helpers';
 
@@ -23,10 +22,6 @@ export function UploadFileLine({
   const preparing = upload.status === 'pending';
   const stalled = !done && (isOffline || isPaused || upload.status === 'paused');
   const canCancel = Boolean(onCancel) && !done;
-  const smooth = useSmoothedValue({
-    target: done ? 100 : percent,
-    enabled: !failed && !preparing,
-  });
 
   return (
     <Stack gap={6}>
@@ -64,7 +59,7 @@ export function UploadFileLine({
       </Group>
       <Progress
         className="drop-upload-toast-progress"
-        value={smooth}
+        value={done ? 100 : percent}
         size="sm"
         radius="xl"
         color={failed ? 'red' : done ? 'sand' : stalled || preparing ? 'graphite' : 'sand'}
