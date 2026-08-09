@@ -1,0 +1,66 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  verify:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify.yaml
+
+  image-api:
+    needs: verify
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/image.yaml
+    with:
+      app: api
+
+  image-web:
+    needs: verify
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/image.yaml
+    with:
+      app: web
+      build-args: |
+        APEX=image.localhost
+        DATABASE_URL=postgresql://image:image@postgres:5432/image
+        REDIS_URL=redis://:image@redis:6379/0
+        VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+
+  migrate:
+    needs: image-api
+    uses: ./.github/workflows/migrate.yaml
+    secrets: inherit
+
+  stack-api:
+    needs: [image-api, image-web, migrate]
+    uses: ./.github/workflows/stack.yaml
+    with:
+      app: api
+      image_root: ${{ needs.image-api.outputs.image_root }}
+      image_tag: ${{ needs.image-api.outputs.image_tag }}
+    secrets: inherit
+
+  stack-web:
+    needs: [image-web, stack-api]
+    uses: ./.github/workflows/stack.yaml
+    with:
+      app: web
+      image_root: ${{ needs.image-web.outputs.image_root }}
+      image_tag: ${{ needs.image-web.outputs.image_tag }}
+    secrets: inherit

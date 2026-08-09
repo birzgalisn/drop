@@ -6,11 +6,12 @@ See [`.github/ACTIONS.md`](../.github/ACTIONS.md) for the full vars/secrets tabl
 
 ## Layout
 
-| File                                 | Stack       | What                                   |
-| ------------------------------------ | ----------- | -------------------------------------- |
-| [`stack-edge.yaml`](stack-edge.yaml) | `drop_edge` | Traefik (TLS via Cloudflare DNS)       |
-| [`stack-data.yaml`](stack-data.yaml) | `drop_data` | Postgres + Redis + `media-provision`   |
-| [`stack-app.yaml`](stack-app.yaml)   | `drop_app`  | API + web (mounts shared `drop_media`) |
+| File                                 | Stack        | What                                         |
+| ------------------------------------ | ------------ | -------------------------------------------- |
+| [`stack-edge.yaml`](stack-edge.yaml) | `drop_edge`  | Traefik (TLS via Cloudflare DNS)             |
+| [`stack-data.yaml`](stack-data.yaml) | `drop_data`  | Postgres + Redis + `media-provision`         |
+| [`stack-api.yaml`](stack-api.yaml)   | `drop` (api) | API service `drop_api` (shared `drop_media`) |
+| [`stack-web.yaml`](stack-web.yaml)   | `drop` (web) | Web service `drop_web` (apex → app redirect) |
 
 ## One-time VPS (Ubuntu 22.04+)
 
@@ -132,7 +133,9 @@ sudo sshd -t && sudo systemctl reload ssh
 
 Point DNS `api.<APEX>` and `app.<APEX>` at the server. Set Variables/Secrets, then run workflow **provision** (swarm init, networks, edge + data).
 
-After that, pushes to `main` build images and redeploy `drop_app` via the **api** / **web** workflows.
+After that, pushes to `main` build images and redeploy `drop_api` then `drop_web` via the **deploy** workflow.
+
+If you still have the old stacks (`drop_app`, `drop_api`, or `drop_web` as separate stacks), remove them once before the first deploy: `docker stack rm drop_app drop_api drop_web`.
 
 ## Manual stack deploy (optional)
 
@@ -141,7 +144,10 @@ If you ever need to deploy from a laptop with the same values exported (or `DOCK
 ```bash
 docker stack deploy --with-registry-auth -c .devops/stack-edge.yaml drop_edge
 docker stack deploy --with-registry-auth -c .devops/stack-data.yaml drop_data
-docker stack deploy --with-registry-auth -c .devops/stack-app.yaml drop_app
+docker stack deploy --with-registry-auth \
+  -c .devops/stack-api.yaml \
+  -c .devops/stack-web.yaml \
+  drop
 ```
 
 ## Check
@@ -149,12 +155,12 @@ docker stack deploy --with-registry-auth -c .devops/stack-app.yaml drop_app
 ```bash
 docker stack ls
 docker service ls
-docker service ps drop_app_api
-docker service logs -f drop_app_api
+docker service ps drop_api
+docker service logs -f drop_api
 ```
 
 ## Tear down
 
 ```bash
-docker stack rm drop_app drop_data drop_edge
+docker stack rm drop drop_data drop_edge
 ```

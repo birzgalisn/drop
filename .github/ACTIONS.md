@@ -3,16 +3,24 @@
 GitHub **Variables** and **Secrets** are the source of truth for production.
 Workflows export them into the environment and `docker stack deploy` interpolates stack YAML on the VPS over SSH — nothing to maintain as `.env` on the server.
 
-| Workflow                                     | Trigger                 | What                                                             |
-| -------------------------------------------- | ----------------------- | ---------------------------------------------------------------- |
-| [`provision.yaml`](workflows/provision.yaml) | manual                  | Swarm init, networks, `drop_edge` + `drop_data`                  |
-| [`api.yaml`](workflows/api.yaml)             | push `main` (api paths) | format/lint/types → build/push → migrate → deploy `drop_app_api` |
-| [`web.yaml`](workflows/web.yaml)             | push `main` (web paths) | format/lint/types → build/push → deploy `drop_app_web`           |
-| [`ci.yaml`](workflows/ci.yaml)               | reusable                | format + lint + typecheck, then GHCR push                        |
-| [`migrate.yaml`](workflows/migrate.yaml)     | reusable / manual       | Drizzle migrate via SSH tunnel to VPS `:5432` (api CD only)      |
-| [`cd.yaml`](workflows/cd.yaml)               | reusable                | `stack deploy` → roll one app (`api` or `web`)                   |
+| File                                         | Trigger              | What                                         |
+| -------------------------------------------- | -------------------- | -------------------------------------------- |
+| [`deploy.yaml`](workflows/deploy.yaml)       | push `main` / manual | entry: verify → image → migrate → stack      |
+| [`verify.yaml`](workflows/verify.yaml)       | reusable             | format + turbo generate / lint / check-types |
+| [`image.yaml`](workflows/image.yaml)         | reusable             | Docker build + GHCR push                     |
+| [`migrate.yaml`](workflows/migrate.yaml)     | reusable / manual    | Drizzle migrate via SSH tunnel               |
+| [`stack.yaml`](workflows/stack.yaml)         | reusable             | pull + deploy one `.devops/stack-*.yaml`     |
+| [`provision.yaml`](workflows/provision.yaml) | manual               | Swarm init, networks, edge + data stacks     |
 
 VPS prep (Docker Engine, `deploy` user, DNS) is still once on the box — see [`.devops/README.md`](../.devops/README.md).
+
+## Deploy chain
+
+```text
+verify → image-api + image-web → migrate → stack-api → stack-web
+```
+
+Names match the artifacts: `image.yaml` pushes GHCR images; `stack.yaml` merges [`stack-api.yaml`](../.devops/stack-api.yaml) / [`stack-web.yaml`](../.devops/stack-web.yaml) into stack `drop` (services `drop_api` / `drop_web`). Job `needs` rolls api before web; each update waits on the service healthcheck (`--detach=false`).
 
 ## Variables
 
@@ -38,7 +46,7 @@ VPS prep (Docker Engine, `deploy` user, DNS) is still once on the box — see [`
 | `POSTGRES_DB`          | DB name                                       |
 | `REDIS_PASSWORD`       | Redis `requirepass`                           |
 
-`cd` builds Swarm-internal URLs from the Postgres/Redis secrets:
+`stack` builds Swarm-internal URLs from the Postgres/Redis secrets:
 
 - `DATABASE_URL=postgresql://…@postgres:5432/…`
 - `REDIS_URL=redis://:…@redis:6379/0`

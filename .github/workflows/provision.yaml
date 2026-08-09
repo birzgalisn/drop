@@ -26,15 +26,14 @@ env:
 
 jobs:
   provision:
-    name: Swarm edge + data
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: |
             .devops
 
-      - name: Provision over SSH
+      - name: Provision
         run: |
           set -euo pipefail
           ssh-agent -a "$SSH_AUTH_SOCK" > /dev/null

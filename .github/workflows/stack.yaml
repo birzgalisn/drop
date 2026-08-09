@@ -1,18 +1,18 @@
-name: cd
+name: stack
 
 on:
   workflow_call:
     inputs:
+      app:
+        description: App service to roll (api or web)
+        required: true
+        type: string
       image_root:
-        description: ghcr.io/owner/repo (images are root-api / root-web)
+        description: ghcr.io/owner/repo
         required: true
         type: string
       image_tag:
-        description: Tag to deploy (usually main)
-        required: true
-        type: string
-      app:
-        description: Which service to roll (api or web)
+        description: Tag to deploy
         required: true
         type: string
 
@@ -32,16 +32,16 @@ env:
   APEX: ${{ vars.APEX }}
   IMAGE_ROOT: ${{ inputs.image_root }}
   IMAGE_TAG: ${{ inputs.image_tag }}
+  APP: ${{ inputs.app }}
   API_BASE_URL: ${{ vars.API_BASE_URL }}
   DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
   REDIS_URL: redis://:${{ secrets.REDIS_PASSWORD }}@redis:6379/0
 
 jobs:
-  deploy:
-    name: Deploy drop_app_${{ inputs.app }}
+  stack:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: |
             .devops
@@ -52,34 +52,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: docker stack deploy over SSH
+      - name: Deploy
         run: |
           set -euo pipefail
-          app="${{ inputs.app }}"
-          case "$app" in
-            api|web) ;;
-            *)
-              echo "Unsupported app: $app (expected api or web)" >&2
-              exit 1
-              ;;
-          esac
-
           ssh-agent -a "$SSH_AUTH_SOCK" > /dev/null
           ssh-add - <<< "${{ secrets.SSH_KEY }}"
           mkdir -p ~/.ssh
           printf '%s\n' 'HOST *' 'StrictHostKeyChecking no' > ~/.ssh/config
 
           export DOCKER_HOST="ssh://${SSH_USER}@${SSH_HOST}"
+          image="${IMAGE_ROOT}-${APP}:${IMAGE_TAG}"
 
-          docker pull "${IMAGE_ROOT}-${app}:${IMAGE_TAG}"
-
+          docker pull "$image"
+          # One stack (`drop`); both files so the other service is not removed.
           docker stack deploy --with-registry-auth \
-            -c .devops/stack-app.yaml drop_app
-
+            -c .devops/stack-api.yaml \
+            -c .devops/stack-web.yaml \
+            drop
           docker service update --detach=false \
-            --image "${IMAGE_ROOT}-${app}:${IMAGE_TAG}" \
-            "drop_app_${app}"
+            --image "$image" "drop_${APP}"
 
-          # Untagged layers left when :main moves; stopped Swarm task containers.
           docker image prune -f
           docker container prune -f
