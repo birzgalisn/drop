@@ -72,5 +72,7 @@ jobs:
           docker service update --detach=false \
             --image "$image" "drop_${APP}"
 
-          docker image prune -f
+          # Stopped Swarm tasks first, then every image not used by a container
+          # (plain `image prune` only drops dangling layers; :main retags leave old digests).
           docker container prune -f
+          docker image prune -af

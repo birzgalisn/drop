@@ -38,10 +38,15 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 RUN pnpm exec turbo run build --filter=web...
 
-FROM nginx:1.31-alpine AS runner
+FROM nginx:1.31-alpine AS nginx
 
+FROM scratch AS runner
+
+COPY --from=nginx / /
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
 EXPOSE 4000/tcp
+
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
+CMD [ "nginx", "-g", "daemon off;" ]

@@ -3,21 +3,21 @@
 GitHub **Variables** and **Secrets** are the source of truth for production.
 Workflows export them into the environment and `docker stack deploy` interpolates stack YAML on the VPS over SSH — nothing to maintain as `.env` on the server.
 
-| File                                         | Trigger              | What                                         |
-| -------------------------------------------- | -------------------- | -------------------------------------------- |
-| [`deploy.yaml`](workflows/deploy.yaml)       | push `main` / manual | entry: verify → image → migrate → stack      |
-| [`verify.yaml`](workflows/verify.yaml)       | reusable             | format + turbo generate / lint / check-types |
-| [`image.yaml`](workflows/image.yaml)         | reusable             | Docker build + GHCR push                     |
-| [`migrate.yaml`](workflows/migrate.yaml)     | reusable / manual    | Drizzle migrate via SSH tunnel               |
-| [`stack.yaml`](workflows/stack.yaml)         | reusable             | pull + deploy one `.devops/stack-*.yaml`     |
-| [`provision.yaml`](workflows/provision.yaml) | manual               | Swarm init, networks, edge + data stacks     |
+| File                                         | Trigger              | What                                                                 |
+| -------------------------------------------- | -------------------- | -------------------------------------------------------------------- |
+| [`deploy.yaml`](workflows/deploy.yaml)       | push `main` / manual | entry: check → image → migrate → stack                               |
+| [`check.yaml`](workflows/check.yaml)         | reusable             | format + turbo generate / lint / check-types                         |
+| [`image.yaml`](workflows/image.yaml)         | reusable             | Docker build + GHCR push (`:buildcache` layer cache); prune untagged |
+| [`migrate.yaml`](workflows/migrate.yaml)     | reusable / manual    | Drizzle migrate via SSH tunnel                                       |
+| [`stack.yaml`](workflows/stack.yaml)         | reusable             | pull + deploy one `.devops/stack-*.yaml`                             |
+| [`provision.yaml`](workflows/provision.yaml) | manual               | Swarm init, networks, edge + data stacks                             |
 
 VPS prep (Docker Engine, `deploy` user, DNS) is still once on the box — see [`.devops/README.md`](../.devops/README.md).
 
 ## Deploy chain
 
 ```text
-verify → image-api + image-web → migrate → stack-api → stack-web
+check → image-api + image-web → migrate → stack-api → stack-web
 ```
 
 Names match the artifacts: `image.yaml` pushes GHCR images; `stack.yaml` merges [`stack-api.yaml`](../.devops/stack-api.yaml) / [`stack-web.yaml`](../.devops/stack-web.yaml) into stack `drop` (services `drop_api` / `drop_web`). Job `needs` rolls api before web; each update waits on the service healthcheck (`--detach=false`).

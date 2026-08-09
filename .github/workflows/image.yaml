@@ -47,10 +47,12 @@ jobs:
           set -euo pipefail
           app="${{ inputs.app }}"
           repo="${GITHUB_REPOSITORY,,}"
+          name="${repo#*/}"
           {
             echo "root=ghcr.io/${repo}"
             echo "tag=${GITHUB_REF_NAME}"
             echo "name=ghcr.io/${repo}-${app}"
+            echo "package=${name}-${app}"
           } >> "$GITHUB_OUTPUT"
 
       - uses: docker/metadata-action@v6
@@ -69,5 +71,35 @@ jobs:
           sbom: false
           tags: ${{ steps.tags.outputs.tags }}
           labels: ${{ steps.tags.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ steps.meta.outputs.name }}:buildcache
+          cache-to: type=registry,ref=${{ steps.meta.outputs.name }}:buildcache,mode=max
+
+      - name: Prune untagged versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE: ${{ steps.meta.outputs.package }}
+          ROOT: >-
+            ${{
+              github.event.repository.owner.type == 'Organization'
+              && format('orgs/{0}', github.repository_owner)
+              || format('users/{0}', github.repository_owner)
+            }}
+        run: |
+          set -euo pipefail
+          path="${ROOT}/packages/container/${PACKAGE}"
+
+          untagged_ids() {
+            gh api --paginate "${path}/versions" \
+              --jq '.[] | select((.metadata.container.tags // []) | length == 0) | .id'
+          }
+
+          delete_version() {
+            local id="$1"
+            gh api --method DELETE --silent "${path}/versions/${id}"
+            echo "Deleted ${id}"
+          }
+
+          while read -r id; do
+            [[ -n "${id}" ]] || continue
+            delete_version "${id}"
+          done < <(untagged_ids)

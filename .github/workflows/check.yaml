@@ -1,4 +1,4 @@
-name: verify
+name: check
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -22,9 +22,9 @@ jobs:
 
       - name: Generate
         env:
-          APEX: verify.localhost
-          DATABASE_URL: postgresql://verify:verify@postgres:5432/verify
-          REDIS_URL: redis://:verify@redis:6379/0
+          APEX: check.localhost
+          DATABASE_URL: postgresql://check:check@postgres:5432/check
+          REDIS_URL: redis://:check@redis:6379/0
         run: pnpm exec turbo run generate
 
       - name: Lint, typecheck
