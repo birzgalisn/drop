@@ -1,6 +1,6 @@
 # Drop
 
-Photo / file sharing platform (product name **Drop**; domain aggregate **space**).
+Photo / file sharing platform
 
 ## Structure
 
