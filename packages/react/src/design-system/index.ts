@@ -61,5 +61,5 @@ export { RADIUS, type Radius } from './util/radius';
 export { ICON_SIZE, type IconSize } from './util/icon-size';
 export { Image, type ImageProps } from './image/feature/image';
 export { Paper, type PaperProps } from './paper/feature/paper';
-export { NotificationsProvider } from './notifications-provider/feature/notifications-provider';
+export { Notifications } from './notifications/feature/notifications';
 export { type WithoutStyle } from './util/without-style';

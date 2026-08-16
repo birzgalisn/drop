@@ -106,7 +106,7 @@ export type Gap = keyof typeof GAP;
 | `Pin` | Digit cells; `readOnly` readout |
 | `Image` | Raster image |
 | `Paper` | Raised surface |
-| `NotificationsProvider` | Toast host |
+| `Notifications` | Toast host |
 | `Background` | Page atmosphere |
 | `Stepper` | Step track (`size`: `narrow` / `regular` / `wide`) |
 

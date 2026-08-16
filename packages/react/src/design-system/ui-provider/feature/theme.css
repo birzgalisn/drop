@@ -1,3 +1,19 @@
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000;
+  src: url('/fonts/dm-sans.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Syne';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 800;
+  src: url('/fonts/syne.woff2') format('woff2');
+}
+
 :root {
   --bg: #0b0d10;
   --surface: #12151a;

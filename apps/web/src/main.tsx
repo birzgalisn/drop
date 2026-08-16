@@ -1,5 +1,5 @@
 import { ApolloProvider } from '@apollo/client/react';
-import { NotificationsProvider, UiProvider } from '@repo/react/design-system';
+import { Notifications, UiProvider } from '@repo/react/design-system';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -16,7 +16,7 @@ async function bootstrap() {
   void createRoot(container).render(
     <StrictMode>
       <UiProvider>
-        <NotificationsProvider />
+        <Notifications />
         <ApolloProvider client={apolloClient}>
           <Router />
         </ApolloProvider>

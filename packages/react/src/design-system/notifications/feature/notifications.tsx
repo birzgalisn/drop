@@ -1,8 +1,9 @@
 import { Notifications as MantineNotifications } from '@mantine/notifications';
 
-import classes from './notifications-provider.module.css';
+import '@mantine/notifications/styles.css';
+import classes from './notifications.module.css';
 
-export function NotificationsProvider() {
+export function Notifications() {
   return (
     <MantineNotifications
       position="bottom-right"
