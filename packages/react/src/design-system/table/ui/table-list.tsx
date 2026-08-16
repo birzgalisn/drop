@@ -1,6 +1,7 @@
 import { Table as MantineTable } from '@mantine/core';
 import type { ReactNode } from 'react';
 
+import { Box } from '../../box/feature/box';
 import { useTableContext } from '../hooks/create-table';
 import type { TableRowBase } from '../util/types';
 import { TableListHead } from './table-list-head';
@@ -40,18 +41,25 @@ export function TableList({
   }
 
   return (
-    <MantineTable className={classes.list} highlightOnHover withTableBorder={false} withRowBorders>
-      <TableListHead>{headerCells}</TableListHead>
-      <TableTbody>
-        {rows.length === 0 ? (
-          <TableTr>
-            <TableTd colSpan={visibleColumnCount}>{empty}</TableTd>
-          </TableTr>
-        ) : (
-          children
-        )}
-      </TableTbody>
-    </MantineTable>
+    <Box className={classes.scroll}>
+      <MantineTable
+        className={classes.list}
+        highlightOnHover
+        withTableBorder={false}
+        withRowBorders
+      >
+        <TableListHead>{headerCells}</TableListHead>
+        <TableTbody>
+          {rows.length === 0 ? (
+            <TableTr>
+              <TableTd colSpan={visibleColumnCount}>{empty}</TableTd>
+            </TableTr>
+          ) : (
+            children
+          )}
+        </TableTbody>
+      </MantineTable>
+    </Box>
   );
 }
 

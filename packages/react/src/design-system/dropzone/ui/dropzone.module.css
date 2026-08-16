@@ -2,6 +2,8 @@
   border: 1px dashed var(--border);
   border-radius: var(--radius-md);
   position: relative;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Beat Mantine dark-6 so Panel tones win. */

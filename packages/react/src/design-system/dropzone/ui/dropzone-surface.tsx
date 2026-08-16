@@ -16,7 +16,7 @@ export function DropzoneSurface({
   children: ReactNode;
 }) {
   return (
-    <Box pos="relative">
+    <Box pos="relative" miw={0}>
       <DropzoneBody hasFiles={hasFiles} hint={hint}>
         {children}
       </DropzoneBody>

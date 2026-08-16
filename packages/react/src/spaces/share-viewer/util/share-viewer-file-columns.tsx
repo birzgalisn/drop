@@ -21,6 +21,7 @@ export const shareViewerFileColumns = columnHelper.columns([
   }),
   columnHelper.accessor('createdAt', {
     header: 'Added',
+    meta: { fit: true },
     cell: ({ getValue }) => <Text>{Dates.format(getValue<string | Date | null>())}</Text>,
   }),
   columnHelper.accessor('byteSize', {

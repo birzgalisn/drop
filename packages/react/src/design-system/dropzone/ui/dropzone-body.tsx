@@ -14,6 +14,7 @@ export function DropzoneBody({
   return (
     <Stack
       gap="regular"
+      miw={0}
       p={hasFiles ? 'md' : 0}
       display={hasFiles ? undefined : 'none'}
       aria-hidden={!hasFiles}

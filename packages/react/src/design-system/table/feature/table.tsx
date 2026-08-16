@@ -30,7 +30,9 @@ export function Table<T extends TableRowBase>({
   return (
     <table.AppTable>
       <TableRowsContext.Provider value={rows}>
-        <Stack gap="regular">{children}</Stack>
+        <Stack gap="regular" miw={0}>
+          {children}
+        </Stack>
       </TableRowsContext.Provider>
     </table.AppTable>
   );

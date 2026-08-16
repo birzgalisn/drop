@@ -1,7 +1,17 @@
 /* Nested in a dropzone — no second fill; the well tone shows through. */
+.scroll {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .list {
   --table-horizontal-spacing: var(--table-inline);
   --table-vertical-spacing: var(--table-inline);
+  width: max-content;
+  min-width: 100%;
   background: transparent;
   border: none;
   border-radius: 0;
