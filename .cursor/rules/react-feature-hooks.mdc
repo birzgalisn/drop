@@ -1,64 +1,151 @@
 ---
-description: Plain React components, props over context, small hooks
+description: Thin hooks — actions, reducers, effects, handler naming
 globs:
   - packages/react/**
   - apps/web/**
 alwaysApply: false
 ---
 
-# React components and hooks
+# React hooks and effects
 
-Keep it boring. A reader should understand a component without opening three other files.
+Hooks **wire**; `util/` **works**.
 
-## Props over context
+## Anatomy of a domain hook
 
-Pass data down as props. Do **not** reach for context because a tree is three levels deep — that is what props are for.
+1. Discriminated union of actions (`type` + `payload`).
+2. Action creators — one per intent; return `as const`.
+3. Thin reducer — `switch` that calls pure utils; `default` throws.
+4. Hook body — `useReducer` / `useState`, sync effects, derive view models **in render**.
+5. Return a small tuple/object with `as const`.
 
-Context is justified only when a consumer cannot receive props at all: it renders in a portal outside the tree, or lives under an unrelated route. Today nothing in this app qualifies. State that must outlive the React tree (in-flight uploads) lives in the module-scoped Zustand store in `spaces/util/upload-space-files-tus.ts`.
+```ts
+export type Action =
+  | { type: 'recreate'; payload: { spaceId: string } }
+  | {
+      type: 'reorder';
+      payload: { fileId: string; nextSortOrder: number[] };
+    };
 
-If you do add a context, one context with both state and handlers is fine. Do not split state/actions "for re-renders" without a measured problem.
+type ActionPayload<T extends Action['type']> = Extract<
+  Action,
+  { type: T }
+>['payload'];
 
-## No compound components
+export function recreateFiles(payload: ActionPayload<'recreate'>): Action {
+  return { type: 'recreate', payload } as const;
+}
 
-Do not attach static children (`Parent.Child = Child`). Do not require `children` for structure. A component owns its own layout and renders it.
+export function reorderFiles(payload: ActionPayload<'reorder'>): Action {
+  return { type: 'reorder', payload } as const;
+}
 
-Routes in `apps/web` pass props and nothing more — no reassembling a feature out of twenty pieces at the call site. If a route needs a variant, add a prop.
+function filesReducer(files: SpaceFile[], action: Action): SpaceFile[] {
+  switch (action.type) {
+    case 'recreate':
+      return initializeFiles({ spaceId: action.payload.spaceId });
+    case 'reorder': {
+      const { fileId, nextSortOrder } = action.payload;
+      return reconcileSortOrder({ files, fileId, nextSortOrder });
+    }
+    default:
+      throw new Error(`Unhandled action: ${action}`);
+  }
+}
 
-## Layers
+export function useSpaceFiles({ spaceId }: { spaceId: string }) {
+  const [files, dispatch] = useReducer(
+    filesReducer,
+    initializeFiles({ spaceId }),
+  );
 
-| Dir | Holds |
-| --- | ----- |
-| `feature/` | The component that owns the data hooks and composes the surface |
-| `ui/` | Presentational components — props only, no data fetching |
-| `hooks/` | React hooks (query, subscription, local state) |
-| `util/` | Pure functions and the Zustand store |
-| `data-access/` | GraphQL documents and generated types |
+  useEffect(() => {
+    dispatch(recreateFiles({ spaceId }));
+  }, [spaceId]);
 
-Apollo, tus, and validation belong in `hooks/` or `util/`, not inline in a component body.
+  const rows = mapSpaceFileRows({ files });
+  return { files: rows, dispatch } as const;
+}
+```
 
-## Small hooks and named functions
+Keep action types in `util/types.ts`. Keep action creators in `util/<verb>-<noun>.ts`. The hook imports both.
 
-One hook, one concern — files/uploads, live updates, unlock, share form. A hook over ~80 lines is a smell: pull the orchestration out into named plain functions in `util/` that take their dependencies as arguments, and let the hook wire them together.
+## Tiny reusable hooks
 
-Anti-patterns:
+```ts
+export function useBoolean(initialValue = false) {
+  const [value, setValue] = useState(initialValue);
+  const setTrue = () => setValue(true);
+  const setFalse = () => setValue(false);
+  return { value, setTrue, setFalse } as const;
+}
+```
 
-- One mega-`use*Session` that hides a whole feature
-- One-liner wrappers with no reusable boundary
-- Deeply nested inline callbacks instead of named functions
+Config hooks take an options object (`function-args.mdc`) and return `{ … } as const`.
+
+## Naming
+
+- Event handlers: `handleX` (`handleSizeChange`, `handleStartEditing`).
+- Action creators: verb the intent (`recreateFiles`, `reorderFiles`).
+- Rename at destructure when useful (`value: isEditing`, `setTrue: handleStartEditing`).
+- Curried handlers when the leaf maps a list: `(index) => (event) => { … }`.
+
+```tsx
+const handleScoreUpdate =
+  (scoreIndex: number) => (event: React.FocusEvent<HTMLInputElement>) => {
+    dispatch(updateScores({ fileId: file.id, scoreIndex, value: +event.target.value || 0 }));
+  };
+```
+
+- Key → handler maps for keyboard (and similar dispatch tables):
+
+```tsx
+const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const keyHandlerMap: {
+    [key: string]: ((e: typeof event) => void) | undefined;
+  } = {
+    Escape: () => handleStopEditing(),
+    Enter: () => inputRef.current?.blur(),
+  };
+
+  keyHandlerMap[event.key]?.(event);
+};
+```
 
 ## Effects
 
-`useEffect` is for synchronizing with **external systems**: DOM listeners, timers, third-party widgets, imperative APIs like Mantine `notifications`. That is a legitimate use — do not contort code to avoid it.
+`useEffect` synchronizes with external systems (DOM, timers, third-party widgets).
 
-Do **not** use it for:
+Example: recreate when `spaceId` changes — an external control drives a full rebuild.
 
-- Deriving values that can be computed in render
-- Resetting state when a prop changes — adjust during render, or remount with `key`
+Derived values stay in render (`const rows = mapSpaceFileRows({ files })`). Prop-driven resets use render adjustment or remount with `key`. Event handlers and effects own side effects (dispatch, navigate, notify).
 
-Never perform a side effect during render (calling a mutation, navigating, invoking a callback prop behind a `useRef` latch). It breaks under StrictMode and concurrent rendering. Use an effect, or an event handler.
+## Size
 
-## Style
+One hook ≈ one concern. Around ~80 lines, extract named pure functions into `util/` and keep the hook as the wire (`tiny-files.mdc`, `pure-domain.mdc`).
 
-React Compiler is enabled — do not hand-wrap handlers or derived values in `useCallback` / `useMemo` for referential stability.
+## Compiler
 
-Components are named `function`s (`function SpaceWizard() { … }`). Helpers declared inside a component are arrow functions (`const handleHome = () => { … }`).
+React Compiler is on. Do not hand-wrap with `useCallback` / `useMemo` / `memo()` for referential stability.
+
+Name each derived value and function in the hook body. The `return { … }` only **composes** those names — do not declare functions inside the returned object (the compiler cannot cache an inline fn independently).
+
+```ts
+const handleZip = (fileIds: string[]) => {
+  openDownload(`${apiBaseUrl}/spaces/${spaceId}/zip${getZipQuery(fileIds)}`);
+};
+
+return { zip: handleZip } as const;
+```
+
+Rename at the return when the public key is not `handleX` (`open: handleOpen`, `zip: handleZip`).
+
+```ts
+// avoid — inner fn is recreated with the whole object
+return {
+  zip: (fileIds: string[]) => openDownload(…),
+};
+```
+
+Components: named `function` declarations. Helpers inside components: arrows (`const handleHome = () => { … }`).
+
+See also `react-handlers.mdc`, `react-composition.mdc`, `react-layers.mdc`.

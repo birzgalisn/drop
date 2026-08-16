@@ -1,7 +1,11 @@
-import { ActionIcon, Group, Progress, Stack, Text } from '@mantine/core';
+import { Group, Progress } from '@mantine/core';
 import { TrashIcon } from '@phosphor-icons/react/Trash';
 import { Bytes } from '@repo/shared';
 
+import { IconButton } from '../../../design-system/icon-button/feature/icon-button';
+import { Stack } from '../../../design-system/stack/feature/stack';
+import { Text } from '../../../design-system/text/feature/text';
+import { ICON_SIZE } from '../../../design-system/util/icon-size';
 import type { SpaceUploadItem } from '../../util/upload-space-files-tus';
 import { uploadPercent } from '../util/upload-notification-helpers';
 
@@ -23,14 +27,19 @@ export function UploadFileLine({
   const stalled = !done && (isOffline || isPaused || upload.status === 'paused');
   const canCancel = Boolean(onCancel) && !done;
 
+  const handleCancel = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    onCancel?.(upload.fileId);
+  };
+
   return (
-    <Stack gap={6}>
+    <Stack gap="tight">
       <Group justify="space-between" gap="xs" wrap="nowrap">
-        <Text size="sm" truncate style={{ flex: 1, minWidth: 0 }}>
+        <Text variant="label" truncate>
           {upload.name}
         </Text>
         <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
-          <Text size="xs" c={failed ? 'red' : 'dimmed'}>
+          <Text variant={failed ? 'error' : 'muted'}>
             {failed
               ? 'Failed'
               : done
@@ -41,20 +50,16 @@ export function UploadFileLine({
                     ? '—'
                     : Bytes.formatSpeed(upload.speedBytesPerSec)}
           </Text>
-          {canCancel && (
-            <ActionIcon
+          {canCancel ? (
+            <IconButton
               variant="subtle"
-              color="red"
-              size="sm"
-              onClick={(event) => {
-                event.stopPropagation();
-                onCancel?.(upload.fileId);
-              }}
+              tone="danger"
+              onClick={handleCancel}
               aria-label={`Cancel upload of ${upload.name}`}
             >
-              <TrashIcon size={14} />
-            </ActionIcon>
-          )}
+              <TrashIcon size={ICON_SIZE.md} />
+            </IconButton>
+          ) : null}
         </Group>
       </Group>
       <Progress

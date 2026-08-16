@@ -1,0 +1,71 @@
+---
+description: Visitor — new operations on a stable object structure via accept()
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Visitor
+
+Add operations over a structure **without** editing element classes. Each element `accept(visitor)`; the visitor has `visitPhysical`, `visitDigital`, …
+
+Works when the **element hierarchy is stable** and **operations grow**.
+
+## Anatomy
+
+```ts
+export interface OrderVisitor {
+  visitPhysicalItem(item: PhysicalItem): number;
+  visitDigitalItem(item: DigitalItem): number;
+}
+
+export interface OrderItemElement {
+  accept(visitor: OrderVisitor): number;
+}
+
+export class PhysicalItem implements OrderItemElement {
+  constructor(
+    public readonly name: string,
+    public readonly price: number,
+  ) {}
+
+  accept(visitor: OrderVisitor) {
+    return visitor.visitPhysicalItem(this);
+  }
+}
+
+export class TaxCalculatorVisitor implements OrderVisitor {
+  visitPhysicalItem(item: PhysicalItem) {
+    return item.price * 0.1;
+  }
+
+  visitDigitalItem(item: DigitalItem) {
+    return item.price * 0.05;
+  }
+}
+
+const tax = elements.reduce((sum, el) => sum + el.accept(taxVisitor), 0);
+```
+
+Visitors may be providers if they need injected config. Elements are plain objects built from DTOs/rows.
+
+## Nest mapping
+
+Do not treat GraphQL `@ResolveField` as Visitor. Do not add `accept()` to Drizzle row types.
+
+Use Visitor when you have a **closed set of item kinds** and several cross-cutting calculations (tax, shipping, discount) that would otherwise pollute every kind class.
+
+If kinds change often (new file types every week), put operations on the types or use Strategy keyed by `mimeType` / enum — each new Visitor method would churn.
+
+## When to use
+
+- Many unrelated operations on a stable structure.
+- Accumulating a result while walking Composite trees.
+
+## When not to use
+
+- Hierarchy churns — every visitor updates.
+- Operation is natural on the element (`file.isReady`).
+
+Related: `nest-composite.mdc`, `nest-iterator.mdc`, `nest-strategy.mdc`.

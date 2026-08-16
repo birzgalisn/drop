@@ -1,0 +1,224 @@
+---
+description: Compounds, default slots, context, and HTML props
+globs:
+  - packages/react/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# React composition
+
+UI API: **hierarchical filenames + compound statics + default slots**.
+
+Full assembly (every file, root → leaf → compose edge): `react-compound-e2e.mdc`.
+
+## Filename encodes the tree
+
+```
+file-explorer.tsx
+file-explorer-toolbar.tsx
+file-explorer-toolbar-title.tsx
+file-explorer-list.tsx
+file-explorer-row.tsx
+file-explorer-row-name.tsx
+```
+
+One file ≈ one node. Attach children as statics:
+
+```ts
+FileExplorer.Toolbar = FileExplorerToolbar;
+FileExplorerToolbar.Title = FileExplorerToolbarTitle;
+FileExplorer.List = FileExplorerList;
+FileExplorer.Row = FileExplorerRow;
+FileExplorerRow.Name = FileExplorerRowName;
+```
+
+Call site reads like the tree: `FileExplorer.Row.Name`.
+
+## Compose edge maps collections
+
+The parent lays out chrome and provides context. The **caller** maps the list:
+
+```tsx
+import { FileExplorer } from '@repo/react/design-system';
+
+import { useSpaceFiles } from '../hooks/use-space-files';
+
+export function SpaceManage({ spaceId }: SpaceManageProps) {
+  const { files, dispatch } = useSpaceFiles({ spaceId });
+
+  return (
+    <FileExplorer dispatch={dispatch}>
+      <FileExplorer.Toolbar />
+      {files.map((file) => (
+        <FileExplorer.Row key={file.id} file={file} />
+      ))}
+    </FileExplorer>
+  );
+}
+```
+
+`FileExplorer` renders `{children}` (and default slots). It does not call `files.map` itself.
+
+## Stable keys
+
+Keys are domain identity, nested when the list is nested:
+
+```tsx
+<FileExplorer.Row key={file.id} file={file} />
+<ScoreCell key={`${file.id}-score-${scoreIndex}`} />
+```
+
+## Default slots for variation
+
+**Named slot:**
+
+```tsx
+import { Stack, type StackProps } from '../../stack/feature/stack';
+import type { WithoutStyle } from '../../util/without-style';
+import type { SpaceFile } from '../util/types';
+
+export function FileExplorerList({
+  files,
+  empty = (
+    <>
+      <FileExplorerList.Empty>
+        <FileExplorerList.Empty.Title />
+        <FileExplorerList.Empty.Hint />
+      </FileExplorerList.Empty>
+    </>
+  ),
+  children,
+  ...props
+}: {
+  files: SpaceFile[];
+  empty?: React.ReactNode;
+  children?: React.ReactNode;
+} & WithoutStyle<Omit<StackProps, 'children'>>) {
+  return (
+    <FileExplorerListContext.Provider value={{ files }}>
+      <Stack gap="tight" {...props}>
+        {files.length === 0 ? empty : children}
+      </Stack>
+    </FileExplorerListContext.Provider>
+  );
+}
+```
+
+Override by passing `empty={…}` or `empty={null}`.
+
+**Default `children`:**
+
+```tsx
+children = (
+  <>
+    <FileExplorerRow.Thumb />
+    <FileExplorerRow.Info>
+      <FileExplorerRow.Name />
+      <FileExplorerRow.Meta />
+    </FileExplorerRow.Info>
+    <FileExplorerRow.Actions />
+  </>
+)
+```
+
+For status-like UI, prefer one discriminant prop (`status: 'ready' | 'error' | …`) or separate thin wrappers alongside slots.
+
+## Context per nesting level
+
+Compound parents that many leaves need provide a small context + throwing accessor:
+
+```ts
+export function useFileExplorerDispatch() {
+  const ctx = useContext(FileExplorerDispatchContext);
+  if (!ctx) {
+    throw new Error(
+      '`useFileExplorerDispatch` must be used within a `FileExplorerDispatchContext`',
+    );
+  }
+  return ctx;
+}
+```
+
+Same pattern: `useFileExplorerListContext`, `useFileExplorerRowContext`.
+
+Context value is always a small object (`value={{ file }}`, `value={{ dispatch }}`), even for one field — so leaves destructure a stable shape.
+
+Context carries **ambient identity / dispatch** for the compound tree. The compose edge still passes `dispatch` / `files` / `file` into the parent that provides the context.
+
+Leaves build the payload and dispatch:
+
+```tsx
+import { Input } from '@repo/react/design-system';
+import { renameFile } from '../util/rename-file';
+import { useFileExplorerDispatch } from '../feature/file-explorer';
+import { useFileExplorerRowContext } from './file-explorer-row';
+
+export function FileExplorerRowName() {
+  const dispatch = useFileExplorerDispatch();
+  const { file } = useFileExplorerRowContext();
+
+  return (
+    <Input
+      defaultValue={file.name}
+      onBlur={(event) =>
+        dispatch(renameFile({ fileId: file.id, name: event.currentTarget.value }))
+      }
+    />
+  );
+}
+```
+
+## Props
+
+- Layout wrappers extend `WithoutStyle<StackProps | GroupProps>` (`design-system-layout.mdc`).
+- Content leaves use DS `Input` / `Pin` / `Text` props (`id`, `aria-*`, `value`, `onChange`).
+- No public `className`, `classNames`, `style`, or `styles` on any public component.
+
+```tsx
+import { Text } from '../../text/feature/text';
+
+export function FileExplorerToolbarTitle() {
+  const { title } = useFileExplorerToolbarContext();
+  return <Text variant="title">{title}</Text>;
+}
+```
+
+## Event merging
+
+When a leaf runs its logic and honors caller handlers, use `callAll`:
+
+```ts
+export function callAll<T extends (...args: any[]) => void>(
+  ...fns: (T | undefined)[]
+) {
+  return (...args: Parameters<T>) => {
+    fns.forEach((fn) => void fn?.(...args));
+  };
+}
+
+onBlur={callAll(onBlur, handleStopEditing)}
+```
+
+## Two modes, two returns
+
+When a control has two visual trees (read vs edit, empty vs filled), return each tree in full — one `if` at the top of the function — rather than one markup soup of nested ternaries.
+
+```tsx
+import { Input, type InputProps, Text } from '@repo/react/design-system';
+
+export type EditableTextProps = Omit<InputProps, 'autoFocus'>;
+
+export function EditableText({ readOnly = false, defaultValue = '', ...props }: EditableTextProps) {
+  const { value: isEditing, setTrue: handleStartEditing, setFalse: handleStopEditing } =
+    useBoolean();
+
+  if (isEditing) {
+    return <Input autoFocus defaultValue={defaultValue} onBlur={handleStopEditing} {...props} />;
+  }
+
+  return (
+    <Text variant="label">{defaultValue}</Text>
+  );
+}
+```

@@ -1,7 +1,11 @@
-import { Center, Paper, PinInput, Stack, Text, Title } from '@mantine/core';
 import { SpaceConfig, type UnlockShareFormValues } from '@repo/shared';
 
 import type { UseAppFormReturn } from '../../../common/hooks/use-app-form';
+import { Center } from '../../../design-system/center/feature/center';
+import { Paper } from '../../../design-system/paper/feature/paper';
+import { Pin } from '../../../design-system/pin/feature/pin';
+import { Stack } from '../../../design-system/stack/feature/stack';
+import { Text } from '../../../design-system/text/feature/text';
 import { DropLogo } from '../../../logo/feature/drop-logo';
 
 export interface ShareViewerUnlockProps {
@@ -38,27 +42,22 @@ export function ShareViewerUnlock({
   const pinError = typeof form.errors.pin === 'string' ? form.errors.pin : '';
 
   return (
-    <Center mih="100vh" p="md" pos="relative" style={{ zIndex: 1 }}>
-      <Stack gap="lg" align="center">
+    <Center mih="100vh" p="md">
+      <Stack gap="loose" align="center">
         <DropLogo onHome={onHome} />
-        <Paper p="xl" radius="md" withBorder w={360} bg="var(--drop-elevated)">
-          <Stack gap="md">
-            <Stack gap={4}>
-              <Title order={3}>Shared with you</Title>
-              <Text size="sm" c="dimmed">
-                Enter the PIN from the sender to view and download the files.
-              </Text>
+        <Paper p="xl" w={360} bg="var(--elevated)">
+          <Stack gap="regular">
+            <Stack gap="tight">
+              <Text variant="title">Shared with you</Text>
+              <Text>Enter the PIN from the sender to view and download the files.</Text>
             </Stack>
 
-            <Stack gap={6}>
-              <Text size="sm" fw={500}>
-                PIN
-              </Text>
-              <PinInput
+            <Stack gap="tight">
+              <Text variant="label">PIN</Text>
+              <Pin
                 key={pinResetKey}
                 length={SpaceConfig.SHARE_PIN_LENGTH}
-                type="number"
-                oneTimeCode
+                mask
                 autoFocus
                 disabled={isUnlocking}
                 value={String(form.values.pin ?? '')}
@@ -71,13 +70,9 @@ export function ShareViewerUnlock({
                 }}
                 onComplete={(value) => void tryUnlock(value)}
                 error={Boolean(form.errors.pin)}
-                aria-label="Share PIN"
+                ariaLabel="Share PIN"
               />
-              {pinError ? (
-                <Text size="xs" c="red">
-                  {pinError}
-                </Text>
-              ) : null}
+              {pinError ? <Text variant="error">{pinError}</Text> : null}
             </Stack>
           </Stack>
         </Paper>

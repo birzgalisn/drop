@@ -1,6 +1,7 @@
 import { Badge, Tooltip } from '@mantine/core';
 import { ArrowSquareOutIcon } from '@phosphor-icons/react/ArrowSquareOut';
 
+import { ICON_SIZE } from '../../design-system/util/icon-size';
 import { getShareViewerUrl } from '../util/get-share-viewer-url';
 import { stashShareViewerPin } from '../util/share-viewer-pin';
 
@@ -17,8 +18,7 @@ export function SpaceManagePreviewLink({ token, pin }: { token: string; pin?: st
         rel="noopener noreferrer"
         color="sand"
         variant="light"
-        mt={4}
-        rightSection={<ArrowSquareOutIcon size={12} />}
+        rightSection={<ArrowSquareOutIcon size={ICON_SIZE.sm} />}
         style={{ cursor: 'pointer', flexShrink: 0 }}
         onClick={() => {
           if (pin) {

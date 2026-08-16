@@ -71,8 +71,7 @@ export class SpaceFileMediaService {
     return {
       stream: createReadStream(path.join(this.media.root, file.storageKey)),
       contentType: file.mimeType,
-      // Inline so the image viewer can render before thumbs exist; clients force
-      // save via `<a download>` on the original (no variant) URL.
+      // Inline so the image viewer can render before thumbs exist.
       inline: true,
     };
   }

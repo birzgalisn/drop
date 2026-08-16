@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import type { MergedSpaceFileItem } from '../../util/get-merged-space-files-with-uploads';
+import { spaceFileMediaUrl } from '../../util/space-file-media-url';
 
 export interface UseUploadCardPreviewSrcOptions {
   item: MergedSpaceFileItem;
@@ -10,9 +11,9 @@ export interface UseUploadCardPreviewSrcOptions {
 }
 
 export interface UseUploadCardPreviewSrcResult {
-  lowSrc: string | null;
-  highSrc: string | null;
-  onLowError: () => void;
+  src: string | null;
+  preview: string | null;
+  onPreviewError: () => void;
 }
 
 /**
@@ -26,7 +27,13 @@ export function useUploadCardPreviewSrc(
   const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
 
   const thumbUrl = spaceId
-    ? `${apiBaseUrl}/spaces/${spaceId}/files/${item.fileId}?variant=thumb`
+    ? spaceFileMediaUrl({
+        apiBaseUrl,
+        scope: 'spaces',
+        scopeId: spaceId,
+        fileId: item.fileId,
+        variant: 'thumb',
+      })
     : null;
   const previewUrl = item.upload?.previewUrl;
   const serverThumb = item.thumbKey ? thumbUrl : null;
@@ -34,13 +41,14 @@ export function useUploadCardPreviewSrc(
   const blobPreview = previewUrl && !blobFailed ? previewUrl : null;
   const readyFallback = !serverThumb && !blobPreview && isReady ? thumbUrl : null;
 
-  const lowLayer = blobPreview ?? readyFallback;
+  const preview = blobPreview ?? readyFallback;
+  const src = serverThumb ?? preview;
 
   return {
-    lowSrc: lowLayer ?? serverThumb,
-    highSrc: serverThumb && lowLayer && serverThumb !== lowLayer ? serverThumb : null,
-    onLowError: () => {
-      if (previewUrl && lowLayer === previewUrl) {
+    src,
+    preview: preview && src && preview !== src ? preview : null,
+    onPreviewError: () => {
+      if (previewUrl && preview === previewUrl) {
         setFailedPreviewUrl(previewUrl);
       }
     },

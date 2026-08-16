@@ -1,26 +1,21 @@
-import { Stack, type StackProps } from '@mantine/core';
 import type { ReactNode } from 'react';
+
+import { Stack, type StackProps } from '../../stack/feature/stack';
+
+import tones from '../ui/panel-tone.module.css';
+import classes from './panel.module.css';
 
 export type PanelTone = 'surface' | 'elevated';
 
-export interface PanelProps extends Omit<StackProps, 'style'> {
+export type PanelProps = Pick<StackProps, 'gap'> & {
   tone?: PanelTone;
   children: ReactNode;
-}
+};
 
 /** Bordered, padded surface used for share/form chrome. */
-export function Panel({ tone = 'elevated', children, ...rest }: PanelProps) {
+export function Panel({ tone = 'elevated', children, gap = 'regular' }: PanelProps) {
   return (
-    <Stack
-      p="md"
-      gap="sm"
-      style={{
-        background: tone === 'surface' ? 'var(--drop-surface)' : 'var(--drop-elevated)',
-        borderRadius: 12,
-        border: '1px solid var(--drop-border)',
-      }}
-      {...rest}
-    >
+    <Stack gap={gap} p="md" className={`${classes.root} ${tones[tone]}`}>
       {children}
     </Stack>
   );

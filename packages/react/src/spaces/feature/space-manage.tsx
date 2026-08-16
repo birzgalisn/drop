@@ -1,12 +1,18 @@
-import { Anchor, Container, Group, Stack, Text, Title } from '@mantine/core';
-import type { ReactNode } from 'react';
+import { SpaceConfig } from '@repo/shared';
+import { memo, type ReactNode } from 'react';
 
-import { FloatyBackground } from '../../design-system/floaty-background/feature/floaty-background';
+import { Anchor } from '../../design-system/anchor/feature/anchor';
+import { Background } from '../../design-system/background/feature/background';
+import { Container } from '../../design-system/container/feature/container';
+import { Dropzone } from '../../design-system/dropzone/feature/dropzone';
+import { Group } from '../../design-system/group/feature/group';
+import { Stack } from '../../design-system/stack/feature/stack';
+import { Text } from '../../design-system/text/feature/text';
 import { DropLogo } from '../../logo/feature/drop-logo';
 import { usePruneReadyUploads } from '../hooks/use-prune-ready-uploads';
 import { useSpaceFiles } from '../hooks/use-space-files';
 import { useAuthorSpaceLiveUpdates } from '../hooks/use-space-live-updates';
-import { SpaceFilesDropzone } from '../ui/space-files-dropzone';
+import { SpaceDropzoneEmpty } from '../ui/space-dropzone-empty';
 import { SpaceManageBootError, SpaceManageBootLoader } from '../ui/space-manage-boot';
 import { SpaceManageFileList } from '../ui/space-manage-file-list';
 import { SpaceManagePreviewLink } from '../ui/space-manage-preview-link';
@@ -24,19 +30,15 @@ export interface SpaceManageProps {
    * the app passes a router `<Navigate />` back to the upload step.
    */
   draftFallback?: ReactNode;
-  activeImageId?: string | null;
-  onActiveImageIdChange?: (fileId: string | null) => void;
   onHome: () => void;
 }
 
 /** Author surface for a shared space: share handoff first, then the files. */
-export function SpaceManage({
+export const SpaceManage = memo(function SpaceManage({
   spaceId,
   apiBaseUrl,
   pin,
   draftFallback,
-  activeImageId,
-  onActiveImageIdChange,
   onHome,
 }: SpaceManageProps) {
   const { space, items, uploads, loading, error, removing, addFiles, removeFile, removeFiles } =
@@ -54,7 +56,7 @@ export function SpaceManage({
   if (loading && !space) {
     return (
       <>
-        <FloatyBackground />
+        <Background />
         <SpaceManageBootLoader />
       </>
     );
@@ -63,8 +65,8 @@ export function SpaceManage({
   if (error || !space) {
     return (
       <>
-        <FloatyBackground />
-        <SpaceManageBootError message={error?.message} onHome={startNewDrop} />
+        <Background />
+        <SpaceManageBootError error={error} onHome={startNewDrop} />
       </>
     );
   }
@@ -78,15 +80,17 @@ export function SpaceManage({
 
   return (
     <>
-      <FloatyBackground />
-      <Container size="sm" py={48} pos="relative" style={{ zIndex: 1 }}>
-        <Stack gap="xl">
+      <Background />
+      <Container size="sm" py={48}>
+        <Stack gap="loose">
           <Group justify="space-between" align="flex-start" wrap="nowrap">
-            <Stack gap={6}>
-              <DropLogo onHome={startNewDrop} order={3} />
-              <Stack gap={6}>
-                <Title order={2}>Manage this Drop</Title>
-                <Text c="dimmed" size="sm" maw={420}>
+            <Stack gap="tight">
+              <DropLogo onHome={startNewDrop} size="compact" />
+              <Stack gap="tight" maw={420}>
+                <Text variant="title" component="h1">
+                  Manage this Drop
+                </Text>
+                <Text>
                   {pin
                     ? 'Your share is live. Copy the share link below, then add or remove files anytime.'
                     : 'Your share is live. Send the link below plus the PIN you set when sharing.'}
@@ -104,15 +108,19 @@ export function SpaceManage({
             />
           ) : null}
 
-          <Stack gap="md">
-            <Text fw={600}>Files in this Drop</Text>
-            <Text size="sm" c="dimmed">
-              Add or remove files anytime. Recipients only see ready files after they unlock with
-              the PIN.
-            </Text>
-            <SpaceFilesDropzone
+          <Stack gap="regular">
+            <Stack gap="tight">
+              <Text variant="title">Files in this Drop</Text>
+              <Text>
+                Add or remove files anytime. Recipients only see ready files after they unlock with
+                the PIN.
+              </Text>
+            </Stack>
+            <Dropzone
               hasFiles={items.length > 0}
               onAddFiles={(files) => void addFiles(files)}
+              maxSize={SpaceConfig.FILE_MAX_BYTES}
+              empty={<SpaceDropzoneEmpty />}
             >
               <SpaceManageFileList
                 items={items}
@@ -120,20 +128,20 @@ export function SpaceManage({
                 apiBaseUrl={base}
                 removing={removing}
                 onRemoveFiles={(fileIds) => void removeFiles(fileIds)}
-                activeImageId={activeImageId}
-                onActiveImageIdChange={onActiveImageIdChange}
               />
-            </SpaceFilesDropzone>
+            </Dropzone>
           </Stack>
 
-          <Text size="sm" c="dimmed" ta="center">
-            Done sharing this one?{' '}
-            <Anchor component="button" type="button" onClick={startNewDrop}>
-              Start a new Drop
-            </Anchor>
-          </Text>
+          <Stack ta="center">
+            <Text>
+              Done sharing this one?{' '}
+              <Anchor component="button" onClick={startNewDrop}>
+                Start a new Drop
+              </Anchor>
+            </Text>
+          </Stack>
         </Stack>
       </Container>
     </>
   );
-}
+});

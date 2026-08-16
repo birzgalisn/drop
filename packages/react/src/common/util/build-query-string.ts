@@ -3,5 +3,5 @@ export function getZipQuery(fileIds: string[]): string {
     return '';
   }
 
-  return `?${fileIds.map((id) => `fileIds=${encodeURIComponent(id)}`).join('&')}`;
+  return `?${new URLSearchParams({ fileIds: fileIds.join(',') })}`;
 }

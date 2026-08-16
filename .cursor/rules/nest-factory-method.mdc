@@ -1,0 +1,78 @@
+---
+description: Factory Method — defer which concrete type to create
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Factory Method
+
+Define how to create a product; let each creator decide the concrete class. Client code never `new`s the product types.
+
+## Anatomy
+
+1. Product interface.
+2. Creator with a factory method (and optional shared wrap-up).
+3. Concrete creators as `@Injectable()` providers.
+4. A thin service that picks a creator (map / token), then calls the factory method.
+
+```ts
+export abstract class ProductCreator {
+  abstract createProduct(data: CreateProductData): Product;
+
+  getProduct(data: CreateProductData): Product {
+    const product = this.createProduct(data);
+    return { ...product, sku: `${product.type}-${Date.now()}` };
+  }
+}
+
+@Injectable()
+export class PhysicalProductCreator extends ProductCreator {
+  createProduct(data: CreateProductData): Product {
+    return { ...data, type: 'physical', details: { shippingRequired: true } };
+  }
+}
+```
+
+`getProduct()` is also a Template Method (`nest-template-method.mdc`).
+
+## Nest mapping
+
+Register each creator as a provider. Select with a `Record` or `Map`, not scattered `new`.
+
+```ts
+@Injectable()
+export class ProductCreationService {
+  private readonly creators: Record<string, ProductCreator>;
+
+  constructor(
+    physical: PhysicalProductCreator,
+    digital: DigitalProductCreator,
+  ) {
+    this.creators = { physical, digital };
+  }
+
+  createProduct(body: { type: string; name: string; price: number }) {
+    const creator = this.creators[body.type];
+    if (!creator) throw AppError.badRequest(`Unknown type: ${body.type}`);
+    return creator.getProduct(body);
+  }
+}
+```
+
+Nest `useFactory` / `useClass` on a module is **related** (custom provider construction) but is not this pattern. This pattern is an inheritance (or strategy) of *creators*.
+
+In this repo, `TusHandlerRegistry.get(uploadType)` is closer to **Strategy** / a simple registry than a creator hierarchy. Prefer a registry when types are data keys (`UploadType`), not subclasses.
+
+## When to use
+
+- Several product kinds share post-create work (ids, timestamps).
+- New kinds should be add-a-class, not edit-every-`new`.
+
+## When not to use
+
+- One product type, or `new Foo(args)` is the whole story.
+- Swapping algorithms, not constructing objects → `nest-strategy.mdc`.
+
+Related: `nest-abstract-factory.mdc`, `nest-prototype.mdc`.

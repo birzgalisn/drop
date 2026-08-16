@@ -1,0 +1,38 @@
+.root {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--elevated);
+  border-radius: var(--radius-md);
+}
+
+.root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(232, 226, 216, 0.07) 45%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  animation: media-shimmer 1.35s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes media-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root::after {
+    animation: none;
+  }
+}

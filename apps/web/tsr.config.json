@@ -3,5 +3,6 @@
   "generatedRouteTree": "./src/route-tree.generated.ts",
   "routeFileIgnorePrefix": "-",
   "quoteStyle": "single",
-  "target": "react"
+  "target": "react",
+  "autoCodeSplitting": true
 }

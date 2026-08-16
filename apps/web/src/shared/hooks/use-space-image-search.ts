@@ -23,7 +23,7 @@ export function useSpaceImageSearch<From extends SpaceImageSearchFrom>(options: 
 
   const { image } = useSearch({ from });
 
-  const onActiveImageIdChange = (fileId: string | null) => {
+  const handleActiveImageIdChange = (fileId: string | null) => {
     void navigate({
       to: '.',
       search: fileId ? { image: fileId } : {},
@@ -34,6 +34,6 @@ export function useSpaceImageSearch<From extends SpaceImageSearchFrom>(options: 
 
   return {
     activeImageId: image ?? null,
-    onActiveImageIdChange,
-  };
+    onActiveImageIdChange: handleActiveImageIdChange,
+  } as const;
 }

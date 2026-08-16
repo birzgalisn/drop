@@ -6,9 +6,8 @@ import { MediaStorageService } from '../../media';
 import type { Space } from '../models/space.model';
 import { SpaceEventsService } from '../services/space-events.service';
 import {
-  FindShareBySpaceIdUseCase,
   FindSpaceByIdUseCase,
-  ListSpaceFilesUseCase,
+  LoadAuthoredSpaceUseCase,
   RemoveSpaceFileUseCase,
 } from '../use-cases';
 
@@ -25,8 +24,7 @@ export class RemoveSpaceFileWorkflow {
     private readonly drizzle: DrizzleService,
     private readonly findSpaceById: FindSpaceByIdUseCase,
     private readonly removeFiles: RemoveSpaceFileUseCase,
-    private readonly listFiles: ListSpaceFilesUseCase,
-    private readonly findShareBySpaceId: FindShareBySpaceIdUseCase,
+    private readonly loadAuthoredSpace: LoadAuthoredSpaceUseCase,
     private readonly spaceEvents: SpaceEventsService,
     private readonly media: MediaStorageService,
   ) {}
@@ -55,15 +53,8 @@ export class RemoveSpaceFileWorkflow {
         throw AppError.notFound('File(s) not found');
       }
 
-      const [files, share] = await Promise.all([
-        this.listFiles.execute({ spaceId: input.spaceId }, tx),
-        this.findShareBySpaceId.execute(input.spaceId, tx),
-      ]);
-
-      // Always pass share (or null) so Apollo does not replace a cached share with
-      // null when the mutation response omits the field.
       return {
-        presented: Object.assign(space, { files, share: share ?? null }),
+        presented: await this.loadAuthoredSpace.execute({ space }, tx),
         removed: removedFiles,
       };
     });

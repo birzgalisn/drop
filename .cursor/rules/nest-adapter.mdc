@@ -1,0 +1,67 @@
+---
+description: Adapter — wrap a foreign API behind the interface we own
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Adapter
+
+Convert a third-party or legacy interface into the one our domain expects.
+
+## Anatomy
+
+- Target interface (what use-cases call).
+- Adaptee (pg `Pool`, Stripe SDK, tus library).
+- Adapter `@Injectable()` that translates args/results and delegates.
+
+```ts
+export interface PaymentGateway {
+  charge(amount: number, currency: string): PaymentResult;
+}
+
+@Injectable()
+export class StripeAdapter implements PaymentGateway {
+  constructor(private readonly stripeApi: StripeApi) {}
+
+  charge(amount: number, currency: string): PaymentResult {
+    const result = this.stripeApi.createCharge(Math.round(amount * 100), currency);
+    return {
+      success: result.status === 'succeeded',
+      transactionId: result.id,
+      gateway: 'stripe',
+    };
+  }
+}
+```
+
+## Nest mapping
+
+Inject the adaptee into the adapter. Export the **target** (or the adapter typed as the target), not the SDK.
+
+In this repo:
+
+- `DrizzleService` adapts `pg` `Pool` + drizzle into `client(tx?)` for use-cases.
+- `GraphqlExceptionFilter` adapts `AppError` into GraphQL / HTTP. Domain throws `AppError`; only the filter knows GraphQL.
+
+```ts
+@Catch()
+export class GraphqlExceptionFilter extends BaseExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost): void {
+    // AppError → HttpException / GraphQL error. Resolvers stay unaware.
+  }
+}
+```
+
+## When to use
+
+- Vendor APIs that do not match our types.
+- Tests should mock the target interface, not the SDK.
+
+## When not to use
+
+- We control both sides and can share a type (`@repo/shared`).
+- The wrapper is a full second domain — split or use Facade.
+
+Related: `nest-bridge.mdc`, `nest-facade.mdc`, `nest-proxy.mdc`.

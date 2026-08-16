@@ -2,6 +2,7 @@ import type { SpaceFileFieldsFragment } from '../data-access/space-fields.genera
 import type { SpaceUploadItem } from './upload-space-files-tus';
 
 export interface MergedSpaceFileItem {
+  id: string;
   fileId: string;
   /** Stable list key — prefers upload.clientKey so stage→commit does not remount. */
   listKey: string;
@@ -14,6 +15,9 @@ export interface MergedSpaceFileItem {
   thumbKey?: string | null;
   previewKey?: string | null;
   upload?: SpaceUploadItem;
+  selectable?: boolean;
+  thumbSrc?: string | null;
+  statusLabel?: string;
 }
 
 export interface GetMergedSpaceFilesWithUploadsOptions {
@@ -65,7 +69,7 @@ export function getMergedSpaceFilesWithUploads(
       (upload) =>
         !serverFileIds.has(upload.fileId) &&
         !usedUploadIds.has(upload.fileId) &&
-        upload.name === file.originalName &&
+        upload.name === file.name &&
         upload.bytesTotal === file.byteSize,
     );
 
@@ -82,10 +86,13 @@ export function getMergedSpaceFilesWithUploads(
     .map((file) => {
       const upload = takeUploadForFile(file);
 
+      const ready = file.status === 'READY' || upload?.status === 'success';
+
       return {
+        id: file.id,
         fileId: file.id,
         listKey: upload?.clientKey ?? file.id,
-        name: file.originalName,
+        name: file.name,
         byteSize: file.byteSize,
         sortOrder: upload?.sortOrder ?? file.sortOrder,
         createdAt: file.createdAt,
@@ -93,6 +100,7 @@ export function getMergedSpaceFilesWithUploads(
         thumbKey: file.thumbKey,
         previewKey: file.previewKey,
         upload,
+        selectable: ready,
       };
     });
 
@@ -102,12 +110,14 @@ export function getMergedSpaceFilesWithUploads(
     }
 
     merged.push({
+      id: upload.fileId,
       fileId: upload.fileId,
       listKey: upload.clientKey,
       name: upload.name,
       byteSize: upload.bytesTotal,
       sortOrder: upload.sortOrder,
       upload,
+      selectable: upload.status === 'success',
     });
   }
 

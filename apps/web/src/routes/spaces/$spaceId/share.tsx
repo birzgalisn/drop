@@ -3,8 +3,10 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { useSpaceNavigation } from '../../../shared/hooks/use-space-navigation';
 import { getApiBaseUrl } from '../../../shared/util/get-api-base-url';
+import { routeHead } from '../../../shared/util/route-head';
 
 export const Route = createFileRoute('/spaces/$spaceId/share')({
+  head: () => routeHead('Share'),
   component: SpaceSharePage,
 });
 

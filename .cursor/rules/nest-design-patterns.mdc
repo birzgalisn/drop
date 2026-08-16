@@ -1,0 +1,41 @@
+---
+description: NestJS GoF pattern map — when to use which rule
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# NestJS design patterns
+
+Use GoF patterns through **Nest DI**, not hand-rolled `getInstance()` / service locators. This repo’s Nest layer is `use-cases/` (one verb) and `workflows/` (orchestration). Do not invent a parallel OOP hierarchy when those folders already express the intent.
+
+Architecture (this codebase): `nest-layers.mdc`, `nest-use-cases.mdc`, `nest-errors.mdc`, `nest-modules.mdc`.
+
+Source of the Nest GoF mappings: [NestJS Design Patterns](https://patterns.michaelguay.dev/patterns/).
+
+## Layers in this package
+
+| Role | Folder | Closest patterns |
+| --- | --- | --- |
+| One persistence/domain verb | `use-cases/` | Command, Template Method |
+| Multi-step orchestration | `workflows/` | Facade, Mediator, Template Method |
+| Shared infrastructure | `services/`, `drizzle/`, `media/`, `tus/`, `pubsub/` | Singleton, Adapter, Strategy, Observer, Proxy |
+| Transport | resolvers, controllers, pipes, filters | Adapter, Decorator, Chain of Responsibility |
+
+`apps/api` only composes modules. Pattern implementations live in `packages/nest`.
+
+## Catalog
+
+**Creational** — `nest-singleton.mdc`, `nest-factory-method.mdc`, `nest-abstract-factory.mdc`, `nest-builder.mdc`, `nest-prototype.mdc`
+
+**Structural** — `nest-adapter.mdc`, `nest-bridge.mdc`, `nest-composite.mdc`, `nest-decorator.mdc`, `nest-facade.mdc`, `nest-flyweight.mdc`, `nest-proxy.mdc`
+
+**Behavioral** — `nest-chain-of-responsibility.mdc`, `nest-command.mdc`, `nest-interpreter.mdc`, `nest-iterator.mdc`, `nest-mediator.mdc`, `nest-memento.mdc`, `nest-observer.mdc`, `nest-state.mdc`, `nest-strategy.mdc`, `nest-template-method.mdc`, `nest-visitor.mdc`
+
+## Defaults
+
+- Providers are singletons unless you set `Scope.REQUEST` / `Scope.TRANSIENT`.
+- Domain objects (`models/`, schema rows) are **not** providers.
+- Injection tokens are `Symbol`s in `tokens/` (`TUS_OPTIONS`).
+- Prefer a new `UseCase` / `Workflow` over a new pattern class when the work is “do this domain verb” or “run these verbs in order”.

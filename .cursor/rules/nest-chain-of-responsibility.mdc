@@ -1,0 +1,67 @@
+---
+description: Chain of Responsibility — pass a request along handlers
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Chain of Responsibility
+
+Give more than one object a chance to handle a request. Sender does not know which handler runs.
+
+## Anatomy
+
+- Handler with `setNext` + `validate`/`handle` that calls the next.
+- Concrete handlers (inventory, payment, fraud).
+- Assembler service that links them once.
+
+```ts
+export abstract class OrderValidator {
+  private nextHandler: OrderValidator | null = null;
+
+  setNext(handler: OrderValidator): OrderValidator {
+    this.nextHandler = handler;
+    return handler;
+  }
+
+  async validate(order: OrderData): Promise<ValidationResult[]> {
+    const result = await this.check(order);
+    const results = [result];
+    if (this.nextHandler) {
+      results.push(...(await this.nextHandler.validate(order)));
+    }
+    return results;
+  }
+
+  protected abstract check(order: OrderData): Promise<ValidationResult>;
+}
+```
+
+Assemble in a provider constructor (or `onModuleInit`):
+
+```ts
+inventory.setNext(payment).setNext(fraud).setNext(address);
+```
+
+Decide whether a failure **stops** the chain or all handlers run (the NestJS Patterns example collects every error).
+
+## Nest mapping
+
+HTTP already has a chain: middleware → guards → interceptors → pipes → handler → filters. Do **not** reimplement that for GraphQL/REST.
+
+Use a domain chain when a **use-case** needs ordered, swappable checks (upload metadata validators, share unlock steps) that are not transport concerns.
+
+Tus: `TusHandlerRegistry` dispatches **one** handler by type — Strategy, not a chain. A chain would be “try handler A, then B”.
+
+## When to use
+
+- Several independent checks; order should be easy to change.
+- Sender must not name the receiver.
+
+## When not to use
+
+- One handler — call it.
+- Tiny fixed list — a workflow with sequential `if` / use-cases is clearer (`UnlockShareWorkflow`).
+
+Related: `nest-decorator.mdc`, `nest-command.mdc`, `nest-template-method.mdc`.

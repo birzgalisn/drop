@@ -1,0 +1,38 @@
+---
+description: Name React event handlers handleX; inline only trivial expressions
+globs:
+  - packages/react/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# React handlers
+
+JSX event props use a named `handle…` function when the body is more than a trivial expression. The name matches the prop: `onClick={handleClick}`, `onOpen={handleOpen}`.
+
+Inline a **single expression** — pass a hook result through, or one call:
+
+```tsx
+<Checkbox onChange={toggleAll} />
+<Button onClick={() => zip([...selected])} />
+```
+
+Name it when there are **guards, branches, or more than one statement**:
+
+```tsx
+const handleRowOpen = ({ id }: { id: string }) => {
+  if (!canOpen) {
+    return;
+  }
+
+  onOpen({ id });
+};
+
+<Table.Row onOpen={handleRowOpen} />
+```
+
+The handler lives in the compose edge or leaf that renders the prop. Shared work stays in `util/` or a hook; the handler only calls it.
+
+Hook-returned functions follow the same shape: name `handleX` in the body, compose it in `return { … }` (`react-feature-hooks.mdc`). Do not wrap with `useCallback`.
+
+List rows use a curried `handleX` (`react-feature-hooks.mdc`).

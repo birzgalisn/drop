@@ -1,0 +1,4 @@
+.root {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}

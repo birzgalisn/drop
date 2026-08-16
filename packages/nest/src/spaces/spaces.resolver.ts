@@ -1,19 +1,25 @@
 import { Args, Context, ID, Mutation, Query, Resolver, Subscription } from '@nestjs/graphql';
-import { addSpaceFilesInputSchema, createShareInputSchema } from '@repo/shared';
+import {
+  addSpaceFilesInputSchema,
+  createShareInputSchema,
+  reorderSpaceFilesInputSchema,
+  unlockShareInputSchema,
+} from '@repo/shared';
 
 import { ZodValidationPipe } from '../validation';
 import { AddSpaceFilesInput } from './dto/add-space-files.input';
 import { CreateShareInput } from './dto/create-share.input';
 import { ReorderSpaceFilesInput } from './dto/reorder-space-files.input';
+import { UnlockShareInput } from './dto/unlock-share.input';
 import { AddSpaceFilesResult } from './models/add-space-files-result.model';
 import { Share } from './models/share.model';
 import { Space } from './models/space.model';
 import { UnlockShareResult } from './models/unlock-share-result.model';
 import { AuthoredSpace } from './pipes/authored-space.decorator';
 import { SpaceAuthorPipe } from './pipes/space-author.pipe';
+import { SpaceContext, type SpaceGraphqlContext } from './services/space-context.service';
 import { SpaceEventsService, type SpaceUpdatedPayload } from './services/space-events.service';
 import { type SpaceRow } from './use-cases';
-import { SpaceContext, type SpaceGraphqlContext } from './util/space-context.util';
 import {
   AddSpaceFilesWorkflow,
   CreateShareWorkflow,
@@ -24,9 +30,6 @@ import {
   ReorderSpaceFilesWorkflow,
   UnlockShareWorkflow,
 } from './workflows';
-
-const addSpaceFilesValidationPipe = new ZodValidationPipe(addSpaceFilesInputSchema);
-const createShareValidationPipe = new ZodValidationPipe(createShareInputSchema);
 
 @Resolver()
 export class SpacesResolver {
@@ -40,6 +43,7 @@ export class SpacesResolver {
     private readonly unlockShareWorkflow: UnlockShareWorkflow,
     private readonly getSharedSpaceWorkflow: GetSharedSpaceWorkflow,
     private readonly spaceEvents: SpaceEventsService,
+    private readonly spaceContext: SpaceContext,
   ) {}
 
   @Mutation(() => Space, {
@@ -47,24 +51,24 @@ export class SpacesResolver {
   })
   async createSpace(@Context() ctx: SpaceGraphqlContext): Promise<Space> {
     const { space, authorKey } = await this.createSpaceWorkflow.execute();
-    SpaceContext.setAuthorCookie(ctx, authorKey);
+    this.spaceContext.setAuthorCookie(ctx, authorKey);
 
     return space;
   }
 
   @Mutation(() => AddSpaceFilesResult)
   async addSpaceFiles(
-    @Args('input', addSpaceFilesValidationPipe) input: AddSpaceFilesInput,
+    @Args('input', new ZodValidationPipe(addSpaceFilesInputSchema)) input: AddSpaceFilesInput,
     @Context() ctx: SpaceGraphqlContext,
   ): Promise<AddSpaceFilesResult> {
     const { result, createdAuthorKey } = await this.addSpaceFilesWorkflow.execute({
       spaceId: input.spaceId,
       files: input.files,
-      authorKey: SpaceContext.readAuthorKey(ctx),
+      authorKey: this.spaceContext.readAuthorKey(ctx),
     });
 
     if (createdAuthorKey) {
-      SpaceContext.setAuthorCookie(ctx, createdAuthorKey);
+      this.spaceContext.setAuthorCookie(ctx, createdAuthorKey);
     }
 
     return result;
@@ -100,7 +104,8 @@ export class SpacesResolver {
     description: 'Author-only. Sets sortOrder for each file (absolute indices in the author list).',
   })
   async reorderSpaceFiles(
-    @Args('input') input: ReorderSpaceFilesInput,
+    @Args('input', new ZodValidationPipe(reorderSpaceFilesInputSchema))
+    input: ReorderSpaceFilesInput,
     @AuthoredSpace(SpaceAuthorPipe) space: SpaceRow,
   ): Promise<Space> {
     return this.reorderSpaceFilesWorkflow.execute({
@@ -119,13 +124,13 @@ export class SpacesResolver {
   ): Promise<Space | null> {
     return this.getSpaceWorkflow.execute({
       spaceId: id,
-      authorKey: SpaceContext.readAuthorKey(ctx),
+      authorKey: this.spaceContext.readAuthorKey(ctx),
     });
   }
 
   @Mutation(() => Share)
   async createShare(
-    @Args('input', createShareValidationPipe) input: CreateShareInput,
+    @Args('input', new ZodValidationPipe(createShareInputSchema)) input: CreateShareInput,
     @AuthoredSpace(SpaceAuthorPipe) space: SpaceRow,
   ): Promise<Share> {
     return this.createShareWorkflow.execute({
@@ -139,12 +144,11 @@ export class SpacesResolver {
     description: 'Verifies the PIN and sets the share session cookie. Returns no file list.',
   })
   async unlockShare(
-    @Args('token') token: string,
-    @Args('pin') pin: string,
+    @Args('input', new ZodValidationPipe(unlockShareInputSchema)) input: UnlockShareInput,
     @Context() ctx: SpaceGraphqlContext,
   ): Promise<UnlockShareResult> {
-    const result = await this.unlockShareWorkflow.execute({ token, pin });
-    SpaceContext.setShareSessionCookie(ctx, token);
+    const result = await this.unlockShareWorkflow.execute(input);
+    this.spaceContext.setShareSessionCookie(ctx, input.token);
 
     return result;
   }
@@ -159,7 +163,7 @@ export class SpacesResolver {
   ): Promise<Space> {
     return this.getSharedSpaceWorkflow.execute({
       token,
-      shareSession: SpaceContext.readShareSession(ctx),
+      shareSession: this.spaceContext.readShareSession(ctx),
     });
   }
 

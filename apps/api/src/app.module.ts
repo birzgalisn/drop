@@ -1,12 +1,14 @@
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, type ConfigType } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { appConfig, NodeEnv } from '@repo/nest/config';
 import { CorsHeaders, corsConfig, CorsModule } from '@repo/nest/cors';
 import { DrizzleModule } from '@repo/nest/drizzle';
 import { GraphqlExceptionFilter } from '@repo/nest/errors';
 import { MediaModule, mediaConfig } from '@repo/nest/media';
-import { PubSubModule } from '@repo/nest/pubsub';
+import { PubSubModule, redisConfig } from '@repo/nest/pubsub';
 import { TusConfig, TusModule } from '@repo/nest/tus';
 import { SpaceConfig } from '@repo/shared';
 
@@ -15,6 +17,7 @@ import { GraphqlModule } from './graphql.module';
 const appEnvFromConfig = appConfig.asProvider();
 const corsEnvFromConfig = corsConfig.asProvider();
 const mediaEnvFromConfig = mediaConfig.asProvider();
+const redisEnvFromConfig = redisConfig.asProvider();
 
 @Module({
   imports: [
@@ -36,6 +39,14 @@ const mediaEnvFromConfig = mediaConfig.asProvider();
     DrizzleModule,
     MediaModule,
     PubSubModule,
+    ScheduleModule.forRoot(),
+    BullModule.forRootAsync({
+      imports: [...redisEnvFromConfig.imports],
+      inject: [...redisEnvFromConfig.inject],
+      useFactory: (redis: ConfigType<typeof redisConfig>) => ({
+        connection: redis.bullmq,
+      }),
+    }),
     TusModule.registerAsync({
       imports: [...mediaEnvFromConfig.imports],
       inject: [...mediaEnvFromConfig.inject],

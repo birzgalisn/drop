@@ -5,9 +5,8 @@ import { DrizzleService, SpaceStatus } from '../../drizzle';
 import type { Space } from '../models/space.model';
 import { SpaceEventsService } from '../services/space-events.service';
 import {
-  FindShareBySpaceIdUseCase,
   FindSpaceByIdUseCase,
-  ListSpaceFilesUseCase,
+  LoadAuthoredSpaceUseCase,
   ReorderSpaceFilesUseCase,
   type ReorderSpaceFileEntry,
 } from '../use-cases';
@@ -23,8 +22,7 @@ export class ReorderSpaceFilesWorkflow {
     private readonly drizzle: DrizzleService,
     private readonly findSpaceById: FindSpaceByIdUseCase,
     private readonly reorderFiles: ReorderSpaceFilesUseCase,
-    private readonly listFiles: ListSpaceFilesUseCase,
-    private readonly findShareBySpaceId: FindShareBySpaceIdUseCase,
+    private readonly loadAuthoredSpace: LoadAuthoredSpaceUseCase,
     private readonly spaceEvents: SpaceEventsService,
   ) {}
 
@@ -42,12 +40,7 @@ export class ReorderSpaceFilesWorkflow {
 
       await this.reorderFiles.execute({ spaceId: input.spaceId, files: input.files }, tx);
 
-      const [files, share] = await Promise.all([
-        this.listFiles.execute({ spaceId: input.spaceId }, tx),
-        this.findShareBySpaceId.execute(input.spaceId, tx),
-      ]);
-
-      return Object.assign(space, { files, share: share ?? null });
+      return this.loadAuthoredSpace.execute({ space }, tx);
     });
 
     await this.spaceEvents.broadcastSpaceUpdated(presented);

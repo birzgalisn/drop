@@ -1,8 +1,11 @@
-import { Box, Image, Text, UnstyledButton } from '@mantine/core';
+import { Image, UnstyledButton } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { ArrowUpIcon } from '@phosphor-icons/react/ArrowUp';
 import { useState } from 'react';
 
+import { Box } from '../../../design-system/box/feature/box';
+import { Text } from '../../../design-system/text/feature/text';
+import { ICON_SIZE } from '../../../design-system/util/icon-size';
 import type { UploadSamplesPreview } from '../types';
 
 import samplesStyles from './upload-samples.module.css';
@@ -56,7 +59,7 @@ export function UploadSamples({ previews, load, onAddFiles }: UploadSamplesProps
       onClick={() => void handleClick()}
     >
       <Box component="span" className={samplesStyles.arrow} aria-hidden>
-        <ArrowUpIcon size={16} weight="bold" />
+        <ArrowUpIcon size={ICON_SIZE.lg} weight="bold" />
       </Box>
       <Box component="span" className={samplesStyles.fan} aria-hidden>
         {previews.map((preview, index) => (
@@ -66,11 +69,15 @@ export function UploadSamples({ previews, load, onAddFiles }: UploadSamplesProps
             src={preview.src}
             alt={preview.alt ?? 'Sample image'}
             fit="cover"
+            w={80}
+            h={80}
+            loading="lazy"
+            decoding="async"
             draggable={false}
           />
         ))}
       </Box>
-      <Text component="span" className={samplesStyles.label} size="sm">
+      <Text variant="label" component="span">
         Try with sample images
       </Text>
     </UnstyledButton>

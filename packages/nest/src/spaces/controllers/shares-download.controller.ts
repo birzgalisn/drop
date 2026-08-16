@@ -1,35 +1,22 @@
+import { Body, Controller, Get, Param, Post, Query, Res, StreamableFile } from '@nestjs/common';
 import {
-  BadRequestException,
-  Controller,
-  Get,
-  NotFoundException,
-  Param,
-  Post,
-  Query,
-  Res,
-  StreamableFile,
-  Body,
-} from '@nestjs/common';
-import { Duration, SpaceConfig } from '@repo/shared';
+  AppError,
+  unlockShareFormSchema,
+  uuidListSchema,
+  type UnlockShareFormValues,
+} from '@repo/shared';
 import type { FastifyReply } from 'fastify';
-import '@fastify/cookie';
 
+import { Streamable } from '../../common';
+import { MediaZipService } from '../../media';
+import { ZodValidationPipe } from '../../validation';
 import { ShareSessionPipe } from '../pipes/share-session.pipe';
+import { SpaceContext } from '../services/space-context.service';
 import { SpaceFileMediaService } from '../services/space-file-media.service';
-import { SpaceZipService } from '../services/space-zip.service';
 import { FindSpaceFileByIdUseCase, ListReadySpaceFilesUseCase, type ShareRow } from '../use-cases';
 import { SpaceFileStorage } from '../util/space-file-storage.util';
 import { UnlockShareWorkflow } from '../workflows';
 
-interface UnlockBody {
-  pin?: string;
-}
-
-/**
- * REST surface for share consumers. Unlock verifies the PIN and drops the
- * opaque session cookie; both download routes require that cookie to equal the
- * share token and the share to be unexpired.
- */
 @Controller('shares')
 export class SharesDownloadController {
   constructor(
@@ -37,27 +24,18 @@ export class SharesDownloadController {
     private readonly findFile: FindSpaceFileByIdUseCase,
     private readonly listReady: ListReadySpaceFilesUseCase,
     private readonly fileMedia: SpaceFileMediaService,
-    private readonly spaceZip: SpaceZipService,
+    private readonly mediaZip: MediaZipService,
+    private readonly spaceContext: SpaceContext,
   ) {}
 
   @Post(':token/unlock')
   async unlock(
     @Param('token') token: string,
-    @Body() body: UnlockBody,
+    @Body(new ZodValidationPipe(unlockShareFormSchema)) body: UnlockShareFormValues,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<{ ok: true }> {
-    if (!body?.pin) {
-      throw new BadRequestException('PIN is required');
-    }
-
     const result = await this.unlockShare.execute({ token, pin: body.pin });
-
-    reply.setCookie(SpaceConfig.SHARE_SESSION_COOKIE, token, {
-      httpOnly: true,
-      path: '/',
-      sameSite: 'lax',
-      maxAge: Duration.DAY,
-    });
+    this.spaceContext.setShareSessionCookie(reply, token);
 
     return result;
   }
@@ -71,39 +49,44 @@ export class SharesDownloadController {
     const file = await this.findFile.execute({ fileId, spaceId: share.spaceId });
 
     if (!file || !SpaceFileStorage.isReady(file)) {
-      throw new NotFoundException('File not available');
+      throw AppError.notFound('File not available');
     }
 
-    const variant = SpaceFileMediaService.parseVariant(variantRaw);
-    const media = this.fileMedia.open({ file, variant });
+    const media = this.fileMedia.open({
+      file,
+      variant: SpaceFileMediaService.parseVariant(variantRaw),
+    });
 
-    return new StreamableFile(media.stream, {
-      type: media.contentType,
-      disposition: media.inline
-        ? `inline; filename="${encodeURIComponent(file.originalName)}"`
-        : `attachment; filename="${encodeURIComponent(file.originalName)}"`,
+    return Streamable.file({
+      stream: media.stream,
+      contentType: media.contentType,
+      filename: file.originalName,
+      inline: media.inline,
     });
   }
 
   @Get(':token/zip')
   async downloadZip(
     @Param('token', ShareSessionPipe) share: ShareRow,
-    @Query('fileIds') fileIdsRaw: string | string[] | undefined,
+    @Query('fileIds', new ZodValidationPipe(uuidListSchema)) fileIds: string[],
   ): Promise<StreamableFile> {
     const ready = await this.listReady.execute({
       spaceId: share.spaceId,
-      fileIds: SpaceZipService.parseFileIds(fileIdsRaw),
+      fileIds,
     });
 
     if (ready.length === 0) {
-      throw new NotFoundException('No files available to download');
+      throw AppError.notFound('No files available to download');
     }
 
-    const zip = this.spaceZip.open({ spaceId: share.spaceId, files: ready });
-
-    return new StreamableFile(zip.stream, {
-      type: 'application/zip',
-      disposition: `attachment; filename="${encodeURIComponent(zip.filename)}"`,
-    });
+    return Streamable.zip(
+      this.mediaZip.open({
+        filename: `space-${share.spaceId}.zip`,
+        files: ready.map((file) => ({
+          storageKey: file.storageKey,
+          name: file.originalName,
+        })),
+      }),
+    );
   }
 }

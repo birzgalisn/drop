@@ -1,0 +1,53 @@
+:root {
+  --bg: #0b0d10;
+  --surface: #12151a;
+  --elevated: #181c24;
+  --stripe: #15191f;
+  --hover: #1c222c;
+  --border: rgba(232, 226, 216, 0.08);
+  --accent: #b39674;
+  --accent-soft: rgba(196, 168, 130, 0.14);
+  --text: #ece8e1;
+  --muted: #9a948a;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+  --font-heading: 'Syne', 'DM Sans', system-ui, sans-serif;
+  --gap-tight: 0.125rem;
+  --gap-regular: 0.5rem;
+  --gap-loose: 1.25rem;
+  --table-inline: 0.5rem;
+  --radius-none: 0;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 2rem;
+
+  --mantine-radius-sm: var(--radius-sm);
+  --mantine-radius-md: var(--radius-md);
+  --mantine-radius-lg: var(--radius-lg);
+  --mantine-radius-xl: var(--radius-xl);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Prefer our surfaces over Mantine's default dark body when scheme is dark. */
+:root[data-mantine-color-scheme='dark'] {
+  --mantine-color-body: var(--bg);
+  --mantine-color-default: var(--surface);
+  --mantine-color-default-hover: var(--elevated);
+  --mantine-color-default-border: var(--border);
+  --mantine-color-dimmed: var(--muted);
+  --mantine-color-text: var(--text);
+}

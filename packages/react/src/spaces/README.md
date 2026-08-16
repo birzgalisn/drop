@@ -2,7 +2,7 @@
 
 Wizard, author manage, and recipient viewer for Drop spaces.
 
-Each surface is a plain component that takes props: the route passes ids, `apiBaseUrl`, and navigation callbacks, and the component owns its own layout. See [`.cursor/rules/react-feature-hooks.mdc`](../../../../.cursor/rules/react-feature-hooks.mdc).
+Each surface is a feature component that takes props: the route passes ids, `apiBaseUrl`, and navigation callbacks, and the component owns its own layout. Structure rules: [`.cursor/rules/code-structure.mdc`](../../../../.cursor/rules/code-structure.mdc), [`.cursor/rules/react-layers.mdc`](../../../../.cursor/rules/react-layers.mdc), [`.cursor/rules/react-composition.mdc`](../../../../.cursor/rules/react-composition.mdc).
 
 ## Exports
 

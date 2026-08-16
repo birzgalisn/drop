@@ -1,0 +1,68 @@
+---
+description: Observer — publish events; subscribers react independently
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Observer
+
+When one object changes, many dependents update **without** the subject listing them.
+
+## Anatomy
+
+- Publisher emits a typed event.
+- Event is a data payload.
+- Observers subscribe; publisher has zero imports of observers.
+
+Nest’s `@nestjs/event-emitter` is this pattern:
+
+```ts
+@Injectable()
+export class OrderService {
+  constructor(private readonly eventEmitter: EventEmitter2) {}
+
+  createOrder(data: CreateOrderData) {
+    const event = new OrderCreatedEvent({ ...data, orderId });
+    this.eventEmitter.emit('order.created', event);
+    return { orderId };
+  }
+}
+
+@Injectable()
+export class InventoryObserver {
+  @OnEvent('order.created')
+  handleOrderCreated(event: OrderCreatedEvent) {
+    // decrement stock — OrderService does not know this class exists
+  }
+}
+```
+
+Register `EventEmitterModule.forRoot()` and every observer as a provider.
+
+## Nest mapping
+
+This repo: `SpaceEventsService` + Redis pubsub notifies live clients when files change. Workflows publish; they do not import GraphQL subscribers.
+
+```ts
+// after claim — CompleteSpaceFileUploadWorkflow
+await this.spaceEvents.broadcast(/* file ready */);
+```
+
+- In-process side effects → `EventEmitter2` / domain events.
+- Cross-instance / websocket → pubsub (`packages/nest/src/pubsub`).
+- Ordered, must-succeed steps (promote then claim) stay in the **workflow**, not observers. Observers are for decoupled reactions (analytics, email, live UI).
+
+## When to use
+
+- Many reactions; set of listeners changes over time.
+- Publisher must not grow a constructor full of collaborators.
+
+## When not to use
+
+- One subscriber — call it.
+- Strict order + return values — Mediator or Facade.
+- Observers that must run in the same transaction as the write — call a use-case in the workflow instead.
+
+Related: `nest-mediator.mdc`, `nest-command.mdc`.

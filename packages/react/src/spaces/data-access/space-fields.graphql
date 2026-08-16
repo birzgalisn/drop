@@ -1,7 +1,7 @@
 fragment SpaceFileFields on SpaceFile {
   id
   spaceId
-  originalName
+  name: originalName
   mimeType
   byteSize
   sortOrder

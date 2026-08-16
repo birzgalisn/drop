@@ -1,5 +1,6 @@
-import { Button, Group } from '@mantine/core';
+import { Button } from '@mantine/core';
 
+import { Group } from '../../../design-system/group/feature/group';
 import type { SpaceWizardNavigate } from '../../util/space-wizard-steps';
 
 export interface UploadContinueProps {

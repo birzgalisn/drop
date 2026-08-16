@@ -4,8 +4,10 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useSpaceNavigation } from '../shared/hooks/use-space-navigation';
 import { getApiBaseUrl } from '../shared/util/get-api-base-url';
 import { SPACE_SAMPLES } from '../shared/util/load-sample-space-files';
+import { routeHead } from '../shared/util/route-head';
 
 export const Route = createFileRoute('/')({
+  head: () => routeHead('New drop'),
   component: HomePage,
 });
 

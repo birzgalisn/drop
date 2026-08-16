@@ -1,8 +1,12 @@
-import { ActionIcon, Box, Group, Stack, Text } from '@mantine/core';
+import { Box, Group } from '@mantine/core';
 import { PauseIcon } from '@phosphor-icons/react/Pause';
 import { PlayIcon } from '@phosphor-icons/react/Play';
 import { Bytes } from '@repo/shared';
 
+import { IconButton } from '../../../design-system/icon-button/feature/icon-button';
+import { Stack } from '../../../design-system/stack/feature/stack';
+import { Text } from '../../../design-system/text/feature/text';
+import { ICON_SIZE } from '../../../design-system/util/icon-size';
 import { useSpaceUploadStore } from '../../util/upload-space-files-tus';
 import {
   activeUploadTitle,
@@ -35,40 +39,37 @@ export function LiveUploadNotificationBody({ spaceId }: { spaceId?: string }) {
   const showCombinedSpeed = !isOffline && !isPaused && combinedSpeed > 0;
   const canTogglePause = !isOffline;
 
+  const handleTogglePause = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    if (isPaused) {
+      resumeAll();
+    } else {
+      pauseAll();
+    }
+  };
+
   return (
     <Box className="drop-upload-toast-body">
       <Group justify="space-between" gap="xs" wrap="nowrap" className="drop-upload-toast-header">
         <Group gap={6} wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
-          <Text size="sm" fw={600} truncate>
+          <Text variant="label" truncate>
             {activeUploadTitle({ count: active.length, isPaused, isOffline })}
           </Text>
-          {showCombinedSpeed && (
-            <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
-              {Bytes.formatSpeed(combinedSpeed)}
-            </Text>
-          )}
+          {showCombinedSpeed && <Text>{Bytes.formatSpeed(combinedSpeed)}</Text>}
         </Group>
-        {canTogglePause && (
-          <ActionIcon
+        {canTogglePause ? (
+          <IconButton
             variant="subtle"
-            size="sm"
-            onClick={(event) => {
-              event.stopPropagation();
-              if (isPaused) {
-                resumeAll();
-              } else {
-                pauseAll();
-              }
-            }}
+            onClick={handleTogglePause}
             aria-label={isPaused ? 'Resume uploads' : 'Pause uploads'}
           >
-            {isPaused ? <PlayIcon size={14} /> : <PauseIcon size={14} />}
-          </ActionIcon>
-        )}
+            {isPaused ? <PlayIcon size={ICON_SIZE.md} /> : <PauseIcon size={ICON_SIZE.md} />}
+          </IconButton>
+        ) : null}
       </Group>
 
       <Box className="drop-upload-toast-files">
-        <Stack gap="md">
+        <Stack gap="regular">
           {active.map((upload) => (
             <UploadFileLine
               key={upload.fileId}

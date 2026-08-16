@@ -1,0 +1,54 @@
+---
+description: Kebab-case files, named exports, shallow imports
+globs:
+  - packages/react/**
+  - packages/shared/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# Imports and files
+
+## File naming
+
+- **kebab-case**: `reconcile-sort-order.ts`, `file-explorer-row.tsx`, `use-space-files.ts`.
+- Hooks: `use-*.ts` / `use-*.tsx`.
+- Hierarchy in the name when it clarifies place in the tree (`file-explorer-toolbar-title.tsx`).
+
+## Exports
+
+Named exports for components, hooks, and utils:
+
+```ts
+export function SpaceWizard(/* … */) { /* … */ }
+export function useItems(/* … */) { /* … */ }
+export function updateArrayAt(/* … */) { /* … */ }
+export type SpaceFile = { /* … */ };
+```
+
+Helpers beside a primary symbol are named exports too (`useItemListDispatch`, action creators). Feature entry files re-export what apps need.
+
+## Import style
+
+Group with a blank line between groups: external → domain hooks / util / types / constants → sibling UI.
+
+```tsx
+import { ItemList, Stack } from '@repo/react/design-system';
+import { useItems } from '../hooks/use-items';
+import { updateArrayAt } from '../util/update-array-at';
+import { type Item } from '../util/types';
+import { itemDefaults } from '../constants/item-defaults';
+
+import { ItemsHeader } from '../ui/items-header';
+```
+
+Public package paths and shallow same-domain relatives.
+
+- Apps import public `@repo/react/...` entrypoints.
+- Cross-package: `@repo/shared`, `@repo/react/...`.
+- UI kits (`@mantine/core`, …) import only inside `packages/react/src/design-system/**` primitive modules and `ui-provider/`.
+- Inside a package, keep relatives shallow; hoist shared symbols to the parent domain `util/` / `hooks/` or a public subpath when subdomains need them.
+
+## Function args
+
+See `function-args.mdc`.

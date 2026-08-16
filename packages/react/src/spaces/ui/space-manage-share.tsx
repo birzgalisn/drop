@@ -1,19 +1,16 @@
-import {
-  ActionIcon,
-  Button,
-  CopyButton,
-  Group,
-  Stack,
-  Text,
-  TextInput,
-  Tooltip,
-} from '@mantine/core';
+import { Button, CopyButton, TextInput, Tooltip } from '@mantine/core';
 import { CheckIcon } from '@phosphor-icons/react/Check';
 import { CopyIcon } from '@phosphor-icons/react/Copy';
 import { Dates } from '@repo/shared';
 
+import { Group } from '../../design-system/group/feature/group';
+import { IconButton } from '../../design-system/icon-button/feature/icon-button';
 import { Panel } from '../../design-system/panel/feature/panel';
+import { Pin } from '../../design-system/pin/feature/pin';
 import { QrCode } from '../../design-system/qr-code/feature/qr-code';
+import { Stack } from '../../design-system/stack/feature/stack';
+import { Text } from '../../design-system/text/feature/text';
+import { ICON_SIZE } from '../../design-system/util/icon-size';
 import { getShareViewerUrl } from '../util/get-share-viewer-url';
 
 export interface SpaceManageSharePanelProps {
@@ -29,21 +26,19 @@ export function SpaceManageSharePanel({ token, expiresAt, pin }: SpaceManageShar
   const pinUrl = pin ? getShareViewerUrl({ token, pin }) : null;
 
   return (
-    <Panel>
-      <Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
-        <Stack gap="sm" style={{ flex: 1, minWidth: 0 }}>
-          <Stack gap={4}>
-            <Text fw={600}>Share link</Text>
-            <Text size="sm" c="dimmed">
-              {expiresAt ? `Expires ${Dates.formatDate(expiresAt)}` : 'Live share'}
-            </Text>
+    <Panel tone="surface">
+      <Group justify="space-between" align="flex-start" wrap="nowrap" gap="regular">
+        <Stack gap="regular" flex={1} miw={0}>
+          <Stack gap="tight">
+            <Text variant="title">Share link</Text>
+            <Text>{expiresAt ? `Expires ${Dates.formatDate(expiresAt)}` : 'Live share'}</Text>
           </Stack>
           <SharePin pin={pin} />
         </Stack>
-        <QrCode url={pinUrl ?? publicUrl} size={88} />
+        <QrCode data={pinUrl ?? publicUrl} />
       </Group>
 
-      <Stack gap="xs">
+      <Stack gap="regular">
         <TextInput
           value={publicUrl}
           readOnly
@@ -51,13 +46,13 @@ export function SpaceManageSharePanel({ token, expiresAt, pin }: SpaceManageShar
           rightSection={
             <CopyButton value={publicUrl}>
               {({ copied, copy }) => (
-                <ActionIcon
+                <IconButton
                   variant="subtle"
                   onClick={copy}
                   aria-label={copied ? 'Copied' : 'Copy link'}
                 >
-                  {copied ? <CheckIcon size={14} /> : <CopyIcon size={16} />}
-                </ActionIcon>
+                  {copied ? <CheckIcon size={ICON_SIZE.md} /> : <CopyIcon size={ICON_SIZE.md} />}
+                </IconButton>
               )}
             </CopyButton>
           }
@@ -71,7 +66,7 @@ export function SpaceManageSharePanel({ token, expiresAt, pin }: SpaceManageShar
 function SharePin({ pin }: { pin?: string }) {
   if (!pin) {
     return (
-      <Text size="xs" c="dimmed">
+      <Text>
         The PIN was set when you shared. Recipients need it to unlock — send it with the link if you
         still have it.
       </Text>
@@ -79,24 +74,19 @@ function SharePin({ pin }: { pin?: string }) {
   }
 
   return (
-    <Group gap="sm" align="center" wrap="nowrap">
-      <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
-        PIN
-      </Text>
-      <Text ff="monospace" fw={700} style={{ fontSize: '1.35rem', letterSpacing: '0.22em' }}>
-        {pin}
-      </Text>
+    <Group gap="regular" align="center" wrap="nowrap">
+      <Text>PIN</Text>
+      <Pin value={pin} readOnly />
       <CopyButton value={pin}>
         {({ copied, copy }) => (
           <Tooltip label={copied ? 'Copied' : 'Copy PIN'}>
-            <ActionIcon
+            <IconButton
               variant="subtle"
-              color={copied ? 'sand' : 'graphite'}
               aria-label={copied ? 'PIN copied' : 'Copy PIN'}
               onClick={copy}
             >
-              {copied ? <CheckIcon size={14} /> : <CopyIcon size={16} />}
-            </ActionIcon>
+              {copied ? <CheckIcon size={ICON_SIZE.md} /> : <CopyIcon size={ICON_SIZE.md} />}
+            </IconButton>
           </Tooltip>
         )}
       </CopyButton>
@@ -118,7 +108,7 @@ function CopyActions({ publicUrl, pinUrl }: { publicUrl: string; pinUrl: string 
   }
 
   return (
-    <Group grow gap="xs">
+    <Group grow gap="regular">
       <CopyButton value={pinUrl}>
         {({ copied, copy }) => (
           <Button fullWidth variant={copied ? 'light' : 'filled'} onClick={copy}>

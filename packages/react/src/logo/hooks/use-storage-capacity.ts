@@ -49,7 +49,7 @@ export function useStorageCapacity(): UseStorageCapacityResult {
         '--drop-meter-waterline': `${getInkWaterline(fillRatio) * 100}%`,
         '--drop-meter-from': colors.from,
         '--drop-meter-to': colors.to,
-        '--drop-meter-empty': 'var(--drop-text)',
+        '--drop-meter-empty': 'var(--text)',
       } as CSSProperties,
     },
   };

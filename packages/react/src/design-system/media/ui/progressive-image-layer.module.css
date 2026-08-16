@@ -1,0 +1,9 @@
+.layer {
+  --progressive-image-fade: 220ms;
+  opacity: 0;
+  transition: opacity var(--progressive-image-fade) ease;
+}
+
+.opaque {
+  opacity: 1;
+}

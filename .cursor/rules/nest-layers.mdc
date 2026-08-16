@@ -1,0 +1,62 @@
+---
+description: Nest layers — compose edge, workflows, use-cases, transport
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Nest layers
+
+`apps/api` **composes**. `packages/nest` **owns domain**.
+
+## Compose edge (`apps/api`)
+
+`AppModule` / `GraphqlModule` wire config, global infra, `APP_FILTER`, and domain modules. No use-cases, workflows, or Drizzle there.
+
+```ts
+@Module({
+  imports: [DrizzleModule, MediaModule, PubSubModule, GraphqlModule],
+  providers: [{ provide: APP_FILTER, useClass: GraphqlExceptionFilter }],
+})
+export class AppModule {}
+```
+
+`forRoot` / `forRootAsync` (Bull, Schedule, Config, Tus) belong here. Domain modules only `registerQueue` / `forFeature`.
+
+## Domain folders (`packages/nest/src/<domain>/`)
+
+| Dir | Holds |
+| --- | --- |
+| `use-cases/` | One persistence/domain verb; inline Drizzle |
+| `workflows/` | Multi-step orchestration (Facade) |
+| `services/` | Infra adapters (events, zip, media paths) |
+| `controllers/` / `*.resolver.ts` | Transport — cookies, pipes, then workflow |
+| `pipes/` | Auth/session at the edge |
+| `jobs/` | BullMQ processors, cron |
+| `models/` | GraphQL ObjectTypes over DB rows |
+| `dto/` | GraphQL InputTypes |
+| `util/` | Pure helpers (cookies, hashing, storage keys); shared Nest helpers live in `common/util` |
+| `tus/` | Domain tus handler + metadata schema |
+
+Module + primary resolver may sit at the domain root (`spaces.module.ts`, `spaces.resolver.ts`). Public export is the module (+ GraphQL models). Keep hooks/schemas internal.
+
+## Data flow
+
+```
+resolver / controller / tus hook
+  → workflow.execute
+    → use-case.execute(input, tx?)
+      → Drizzle
+  → cookie / StreamableFile / GraphQL parent
+```
+
+GraphQL `SpacesResolver` calls **workflows only**. REST may call a workflow (unlock) plus a thin download helper; do not re-orchestrate five use-cases in the controller.
+
+Health is a micro-domain: transport may call one composing use-case (`RunUpChecksUseCase`) instead of a `workflows/` folder.
+
+## Secrets
+
+Return Drizzle rows as GraphQL parents. Omit `@Field` on `authorKey`, `pinHash`, `storageKey`. Bind cookies at the edge; workflows return secrets for that (`authorKey`), they do not write cookies.
+
+Related: `nest-use-cases.mdc`, `nest-errors.mdc`, `nest-modules.mdc`, `nest-facade.mdc`, `nest-command.mdc`.

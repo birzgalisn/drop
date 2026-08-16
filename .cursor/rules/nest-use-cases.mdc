@@ -1,0 +1,47 @@
+---
+description: Nest use-cases — one verb, execute(input, db?)
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Nest use-cases
+
+A use-case is **one verb**. It implements `UseCase<Input, Output>` and talks to Drizzle (or one infra service). Workflows orchestrate several use-cases.
+
+```ts
+export interface UseCase<Input = void, Output = void> {
+  execute(...args: UseCaseExecuteArgs<Input>): Output | Promise<Output>;
+}
+```
+
+## `execute`
+
+- **With input:** `execute(input, db?)` — options object when input has 2+ fields (`FindSpaceFileByIdInput`). A single id may stay positional (`FindSpaceByIdUseCase.execute(id, db?)`).
+- **Bare `db`:** intentional, not an options bag. Prefer the caller-owned transaction when the workflow already opened one.
+- **Without input:** `execute(db?)`.
+
+```ts
+@Injectable()
+export class CreateSpaceUseCase implements UseCase<CreateSpaceInput, SpaceRow> {
+  constructor(private readonly drizzle: DrizzleService) {}
+
+  async execute(input: CreateSpaceInput, db?: DrizzleClient): Promise<SpaceRow> {
+    const client = this.drizzle.client(db);
+    const [row] = await client.insert(spaces).values({ ... }).returning();
+    if (!row) throw AppError.internal('Failed to create space');
+    return row;
+  }
+}
+```
+
+Always `implements UseCase<…>`. Always `this.drizzle.client(db)` — never assume the module-level client inside a transaction.
+
+## Workflows
+
+`execute` on a workflow is the Facade (`nest-facade.mdc`). Open a transaction when several writes must commit together; pass `tx` into use-cases. Do not hold a transaction across filesystem I/O (promote upload, delete media).
+
+Pass-through of a single use-case: skip the workflow (health checks). Nested create under add-files may pass `db` into `CreateSpaceWorkflow` because it is used inside a transaction.
+
+Related: `nest-layers.mdc`, `nest-command.mdc`, `function-args.mdc`.

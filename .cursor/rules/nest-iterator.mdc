@@ -1,0 +1,72 @@
+---
+description: Iterator — traverse a collection without exposing its structure
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Iterator
+
+Walk a collection without exposing how it is stored. Different iterators = different traversals (price order, category, pages).
+
+## Anatomy
+
+- `hasNext` / `next` / `reset` (or implement `Iterable`).
+- Concrete iterators hold **cursor state**.
+- Collection exposes factory methods for each traversal.
+
+```ts
+export interface Iterator<T> {
+  hasNext(): boolean;
+  next(): T;
+}
+
+export class PriceAscendingIterator implements Iterator<Product> {
+  private position = 0;
+  private readonly sorted: Product[];
+
+  constructor(products: Product[]) {
+    this.sorted = [...products].sort((a, b) => a.price - b.price);
+  }
+
+  hasNext() {
+    return this.position < this.sorted.length;
+  }
+
+  next() {
+    const item = this.sorted[this.position];
+    this.position += 1;
+    return item;
+  }
+}
+```
+
+Iterators are **not** providers — they are per-traversal.
+
+## Nest mapping
+
+Prefer language tools:
+
+```ts
+for (const file of files) { /* … */ }
+files.filter((f) => f.status === SpaceFileStatus.READY)
+```
+
+Drizzle already returns arrays/cursors. `list-space-files.use-case.ts` should return rows, not a custom iterator class.
+
+Use a named iterator only when you have **several non-trivial traversals** of an in-memory aggregate and want to hide the tree (Composite + Iterator).
+
+JS `Symbol.iterator` / async generators are the idiomatic form.
+
+## When to use
+
+- Multiple traversals; collection class must stay dumb.
+- Hide a tree or graph.
+
+## When not to use
+
+- One `for` / `map` over an array.
+- Pagination belongs in SQL (`limit`/`offset` or cursors), not an in-memory `PaginatedIterator` of the full table.
+
+Related: `nest-composite.mdc`, `nest-factory-method.mdc`, `nest-visitor.mdc`.

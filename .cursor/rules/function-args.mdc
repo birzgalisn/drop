@@ -1,12 +1,58 @@
 ---
-description: Function argument style
-globs:
+description: Function argument style — options objects
 alwaysApply: true
 ---
 
 # Function args
 
-- One parameter → positional arg is fine.
-- Two or more parameters → single **options object**.
-- Applies to use-cases, workflows, helpers, and hooks.
-- Exception: Nest DI constructors, framework APIs, and use-case `execute(input, db?)` / `execute(db?)` where `db` is an optional `DrizzleClient` (usually a transaction).
+- **One** parameter → positional is fine (`useBoolean(false)`, `generateNumber(max)`).
+- **Two or more** parameters → single **options object**.
+- Applies to hooks, util functions, and FE helpers.
+- Framework APIs keep their own signatures (`useState`, DOM handlers, library clients).
+
+## Options object for config
+
+```ts
+export function useRangeSlider({
+  initial = initialSize,
+  options = availableSizes,
+}: {
+  initial?: number;
+  options?: number[];
+} = {}) {
+  const [value, setValue] = useState(initial);
+  // …
+  return { value, handleValueChange } as const;
+}
+```
+
+## Single payload object (action creators)
+
+```ts
+export function reorderFiles(payload: ActionPayload<'reorder'>): Action {
+  return { type: 'reorder', payload } as const;
+}
+
+dispatch(reorderFiles({ fileId, nextSortOrder }));
+```
+
+## Rest args when the API is a list
+
+```ts
+export function callAll<T extends (...args: any[]) => void>(
+  ...fns: (T | undefined)[]
+) {
+  return (...args: Parameters<T>) => {
+    fns.forEach((fn) => void fn?.(...args));
+  };
+}
+```
+
+## Multi-arg helpers
+
+```ts
+reconcileSortOrder({ files, fileId, nextSortOrder });
+getFileRowMeta({ file, uploads });
+```
+
+Name options fields after domain concepts.

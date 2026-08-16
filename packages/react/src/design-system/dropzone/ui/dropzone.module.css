@@ -1,0 +1,45 @@
+.root {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+/* Beat Mantine dark-6 so Panel tones win. */
+:global([data-mantine-color-scheme='dark']) .root[data-tone='surface'],
+:global([data-mantine-color-scheme='dark']) .root[data-tone='surface']:hover {
+  background-color: var(--surface);
+  border-color: var(--border);
+}
+
+:global([data-mantine-color-scheme='dark']) .root[data-tone='elevated'],
+:global([data-mantine-color-scheme='dark']) .root[data-tone='elevated']:hover {
+  background-color: var(--elevated);
+  border-color: var(--border);
+}
+
+.rootInteractive {
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+:global([data-mantine-color-scheme='dark']) .rootInteractive[data-accept] {
+  border-color: rgba(196, 168, 130, 0.55);
+  background-color: rgba(196, 168, 130, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(196, 168, 130, 0.2);
+}
+
+.accept {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  pointer-events: none;
+  background: rgba(11, 13, 16, 0.45);
+  backdrop-filter: blur(16px);
+  color: var(--accent);
+}

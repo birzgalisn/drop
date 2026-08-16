@@ -1,0 +1,64 @@
+---
+description: Interpreter — mini-language as an expression tree
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Interpreter
+
+Represent a small language as an AST of expressions; `interpret(context)` evaluates it.
+
+## Anatomy
+
+- Context (order totals, customer type).
+- Expression interface.
+- Terminals (`PERCENT 10`, `FLAT 5`).
+- Combinators (`IF`, `AND`).
+- Parser service (injectable, **stateless**) that turns a string into a tree.
+
+```ts
+export interface Expression {
+  interpret(context: DiscountContext): number;
+}
+
+export class PercentDiscountExpression implements Expression {
+  constructor(private readonly percentage: number) {}
+
+  interpret(context: DiscountContext) {
+    return (context.totalAmount * this.percentage) / 100;
+  }
+}
+
+export class AndExpression implements Expression {
+  constructor(
+    private readonly left: Expression,
+    private readonly right: Expression,
+  ) {}
+
+  interpret(context: DiscountContext) {
+    return this.left.interpret(context) + this.right.interpret(context);
+  }
+}
+```
+
+Expressions are plain classes. Only the parser is a provider.
+
+## Nest mapping
+
+Do not treat Zod, GraphQL, or SQL as Interpreter. Those have real parsers.
+
+Use this only for a **stable, tiny DSL** (promo rules stored as strings). If grammar grows, use a parser generator or a data-driven rule table (Strategy), not a hand-rolled tree walker.
+
+## When to use
+
+- Business-editable rules with a small grammar.
+- Grammar rarely changes.
+
+## When not to use
+
+- Complex languages.
+- Hot path millions of times — tree walk is costly; compile to a function or SQL.
+
+Related: `nest-composite.mdc`, `nest-strategy.mdc`, `nest-visitor.mdc`.

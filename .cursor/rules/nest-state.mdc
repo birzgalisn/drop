@@ -1,0 +1,63 @@
+---
+description: State — replace status conditionals with state objects
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# State
+
+Behavior changes with internal state. Each state object knows **legal transitions**.
+
+Strategy swaps algorithms; the context does not change “kind”. State **is** the context’s lifecycle; transitions replace the state object.
+
+## Anatomy
+
+- State interface (`confirm`, `ship`, `cancel`).
+- Context holds current state and delegates.
+- Concrete states call `context.setState(new NextState())` or reject.
+
+```ts
+export class PendingState implements OrderState {
+  getName() {
+    return 'Pending';
+  }
+
+  confirm(context: OrderStateContext) {
+    context.setState(new ConfirmedState());
+    return { success: true, newState: 'Confirmed', message: 'confirmed' };
+  }
+
+  ship() {
+    return { success: false, newState: 'Pending', message: 'confirm first' };
+  }
+}
+```
+
+State classes are plain and often stateless. A service maps persisted ids → context if you keep machines in memory (usually you persist the enum instead).
+
+## Nest mapping
+
+This repo already has lifecycle **enums** (`SpaceStatus`: draft → shared, `SpaceFileStatus`: uploading → ready). Prefer:
+
+```ts
+if (file.status === SpaceFileStatus.READY) return;
+```
+
+inside a workflow, plus DB constraints.
+
+Graduate to State objects when **many operations** each have a large `switch (status)` and invalid transitions need a single place to encode.
+
+Do not keep an in-memory `Map<orderId, OrderContext>` on a singleton as source of truth.
+
+## When to use
+
+- Rich state machines with many illegal combinations.
+- You want transitions explicit and testable per state class.
+
+## When not to use
+
+- Two or three statuses with a couple of `if`s — enum + workflow is enough.
+
+Related: `nest-strategy.mdc`, `nest-command.mdc`.

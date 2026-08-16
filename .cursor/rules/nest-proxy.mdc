@@ -1,0 +1,69 @@
+---
+description: Proxy — same interface, extra control (cache, access, lazy)
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Proxy
+
+A stand-in with the **same interface** as the real subject. Adds caching, access checks, or lazy init **without** changing the subject.
+
+Decorator adds responsibilities (logging, discounts). Proxy **controls access** to the real object (often one wrapper, not a stack of features).
+
+## Anatomy
+
+- Subject interface.
+- Real subject (expensive catalog, remote API).
+- Proxy implements the same interface and delegates.
+
+```ts
+@Injectable()
+export class CachingProxyService implements ProductCatalog {
+  private readonly cache = new Map<string, Product | null>();
+
+  constructor(private readonly realCatalog: ProductCatalogService) {}
+
+  getProduct(id: string) {
+    if (this.cache.has(id)) return this.cache.get(id) ?? null;
+    const product = this.realCatalog.getProduct(id);
+    this.cache.set(id, product);
+    return product;
+  }
+}
+```
+
+Compose proxies with `useFactory` when one proxy should wrap another:
+
+```ts
+{
+  provide: AccessControlProxyService,
+  useFactory: (caching: CachingProxyService) =>
+    new AccessControlProxyService(caching),
+  inject: [CachingProxyService],
+}
+```
+
+## Nest mapping
+
+| Need | Prefer |
+| --- | --- |
+| HTTP/GraphQL auth | Guards / pipes (`SpaceAuthorPipe`, `ShareSessionPipe`) |
+| In-process cache in front of a slow collaborator | Proxy (or dedicated cache service) |
+| Lazy connection | Proxy or `OnModuleInit` |
+
+Do not busy-wait to “simulate slowness”. Do not put a process-wide catalog cache in a singleton unless invalidation is defined (uploads mutate files constantly).
+
+## When to use
+
+- Virtual proxy (cache / lazy).
+- Protection proxy when the **subject API** must enforce access, not just the transport.
+
+## When not to use
+
+- Subject is cheap.
+- Access is already uniform at the resolver — a guard is enough.
+- Proxy would need a different interface → Adapter.
+
+Related: `nest-decorator.mdc`, `nest-adapter.mdc`, `nest-facade.mdc`.

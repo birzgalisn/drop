@@ -1,22 +1,22 @@
-import { Controller, Get, NotFoundException, Param, Query, StreamableFile } from '@nestjs/common';
+import { Controller, Get, Param, Query, StreamableFile } from '@nestjs/common';
+import { AppError, uuidListSchema } from '@repo/shared';
 
+import { Streamable } from '../../common';
+import { MediaZipService } from '../../media';
+import { ZodValidationPipe } from '../../validation';
 import { AuthoredSpace } from '../pipes/authored-space.decorator';
 import { SpaceAuthorPipe } from '../pipes/space-author.pipe';
 import { SpaceFileMediaService } from '../services/space-file-media.service';
-import { SpaceZipService } from '../services/space-zip.service';
 import { FindSpaceFileByIdUseCase, ListReadySpaceFilesUseCase, type SpaceRow } from '../use-cases';
 import { SpaceFileStorage } from '../util/space-file-storage.util';
 
-/**
- * Author-authenticated downloads for a space they own.
- */
 @Controller('spaces')
 export class SpacesDownloadController {
   constructor(
     private readonly findFile: FindSpaceFileByIdUseCase,
     private readonly listReady: ListReadySpaceFilesUseCase,
     private readonly fileMedia: SpaceFileMediaService,
-    private readonly spaceZip: SpaceZipService,
+    private readonly mediaZip: MediaZipService,
   ) {}
 
   @Get(':spaceId/files/:fileId')
@@ -28,39 +28,44 @@ export class SpacesDownloadController {
     const file = await this.findFile.execute({ fileId, spaceId: space.id });
 
     if (!file || !SpaceFileStorage.isReady(file)) {
-      throw new NotFoundException('File not available');
+      throw AppError.notFound('File not available');
     }
 
-    const variant = SpaceFileMediaService.parseVariant(variantRaw);
-    const media = this.fileMedia.open({ file, variant });
+    const media = this.fileMedia.open({
+      file,
+      variant: SpaceFileMediaService.parseVariant(variantRaw),
+    });
 
-    return new StreamableFile(media.stream, {
-      type: media.contentType,
-      disposition: media.inline
-        ? `inline; filename="${encodeURIComponent(file.originalName)}"`
-        : `attachment; filename="${encodeURIComponent(file.originalName)}"`,
+    return Streamable.file({
+      stream: media.stream,
+      contentType: media.contentType,
+      filename: file.originalName,
+      inline: media.inline,
     });
   }
 
   @Get(':spaceId/zip')
   async downloadZip(
     @AuthoredSpace(SpaceAuthorPipe) space: SpaceRow,
-    @Query('fileIds') fileIdsRaw: string | string[] | undefined,
+    @Query('fileIds', new ZodValidationPipe(uuidListSchema)) fileIds: string[],
   ): Promise<StreamableFile> {
     const ready = await this.listReady.execute({
       spaceId: space.id,
-      fileIds: SpaceZipService.parseFileIds(fileIdsRaw),
+      fileIds,
     });
 
     if (ready.length === 0) {
-      throw new NotFoundException('No files available to download');
+      throw AppError.notFound('No files available to download');
     }
 
-    const zip = this.spaceZip.open({ spaceId: space.id, files: ready });
-
-    return new StreamableFile(zip.stream, {
-      type: 'application/zip',
-      disposition: `attachment; filename="${encodeURIComponent(zip.filename)}"`,
-    });
+    return Streamable.zip(
+      this.mediaZip.open({
+        filename: `space-${space.id}.zip`,
+        files: ready.map((file) => ({
+          storageKey: file.storageKey,
+          name: file.originalName,
+        })),
+      }),
+    );
   }
 }

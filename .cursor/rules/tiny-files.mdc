@@ -1,0 +1,77 @@
+---
+description: One concern per file — budgets, hierarchy names, co-location
+globs:
+  - packages/react/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# Tiny files
+
+Modules stay small and single-purpose.
+
+## Soft budgets
+
+| Kind | Prefer | Split when |
+| --- | --- | --- |
+| UI component | ≤ ~100 lines | approaching ~150 or a second visual responsibility |
+| Hook | ≤ ~80 lines | extracting named util functions would clarify |
+| Util module | one algorithm or cohesive API | a second unrelated transform appears |
+| Compound parent | layout + context + default slots | leaf markup belongs in child modules |
+| Data tables | frozen constants | — data, not logic |
+
+Typical bands: leaves ~8–25 lines; compound parents / thin hooks / compose edges ~40–70; richest leaf with a private helper, or a dense pure util, ~80–120.
+
+## Filename = hierarchy
+
+Use kebab names that mirror the tree:
+
+```
+file-explorer-row-name.tsx
+space-wizard-share-pin-field.tsx
+```
+
+## One visual responsibility
+
+One leaf renders one control. Name, thumb, and actions are sibling modules:
+
+```tsx
+import { Text } from '../../text/feature/text';
+
+export function FileExplorerRowName() {
+  const { file } = useFileExplorerRowContext();
+
+  return <Text variant="label">{file.name ?? fileDefaults.name}</Text>;
+}
+```
+
+## Icons
+
+One SVG per file; named function; `WithoutStyle` SVG props (`width`, `height`, `aria-hidden` — not `className`):
+
+```tsx
+export function PinIcon(props: WithoutStyle<React.SVGProps<SVGSVGElement>>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {...props}>
+      <path stroke="currentColor" d="…" />
+    </svg>
+  );
+}
+```
+
+Place under `icons/` next to the feature that owns them.
+
+## Private co-located helper
+
+A private `function ThumbFallback` at the **bottom** of `file-explorer-row-thumb.tsx` fits when it is ≤ ~40 lines, presentational, and only used in that file. Shared use → its own module.
+
+## Pure work beside UI
+
+Row UI dispatches `reorderFiles`; list mutation lives in `util/reconcile-sort-order.ts`.
+
+## Split cues
+
+1. A second visual block appears → one file per block.
+2. Hook accumulates named inner functions → move to `util/`.
+3. Default slot JSX grows → extract compound children into modules.
+4. Types/constants dominate → `util/types.ts` / `constants/` (`types-and-constants.mdc`).

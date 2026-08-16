@@ -1,0 +1,61 @@
+---
+description: Memento — opaque snapshots for restore / undo
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Memento
+
+Capture state so the originator can restore it later **without** leaking internals to the caretaker.
+
+## Anatomy
+
+- Originator: `save()` / `restore(memento)`.
+- Memento: immutable copy; caretaker must not poke fields (narrow getter API).
+- Caretaker: undo/redo stacks.
+
+```ts
+export class CartMemento {
+  constructor(private readonly items: CartItem[]) {
+    this.items = items.map((item) => ({ ...item }));
+  }
+
+  getItems() {
+    return this.items.map((item) => ({ ...item }));
+  }
+}
+
+export class ShoppingCart {
+  save() {
+    return new CartMemento(this.items);
+  }
+
+  restore(memento: CartMemento) {
+    this.items = memento.getItems();
+  }
+}
+```
+
+Caretaker as a provider **must not** be a process-wide cart for all users. Use request/session scope, or persist snapshots.
+
+## Nest mapping
+
+- DB transactions are the usual “restore” for failed workflows — not Memento.
+- File reorder undo would be persisted versions / event log, not an in-memory stack on `SpacesModule`.
+- Pair with Command when undo is a first-class API (`nest-command.mdc`).
+- Clone vs snapshot: Prototype copies to create a **new** object; Memento copies to **roll back** the same object.
+
+## When to use
+
+- Undo/redo of an encapsulated in-memory editor.
+- Commit/rollback of a unit of work that is not a SQL transaction.
+
+## When not to use
+
+- Trivial state — keep the previous DTO.
+- Huge graphs — store deltas.
+- Multi-instance API memory stacks.
+
+Related: `nest-command.mdc`, `nest-prototype.mdc`.

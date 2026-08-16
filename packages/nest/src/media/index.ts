@@ -7,4 +7,6 @@ export { MediaModule } from './media.module';
 export { MediaResolver } from './media.resolver';
 export { StorageCapacity } from './models/storage-capacity.model';
 export { MediaStorageService } from './services/media-storage.service';
+export { MediaZipService } from './services/media-zip.service';
+export type { OpenZipResult, ZipEntry } from './services/media-zip.service';
 export { SharpThreading } from './util/sharp-threading.util';

@@ -1,7 +1,9 @@
-import { Stack } from '@mantine/core';
+import { SpaceConfig } from '@repo/shared';
 
+import { Dropzone } from '../../../design-system/dropzone/feature/dropzone';
+import { Stack } from '../../../design-system/stack/feature/stack';
 import { usePruneReadyUploads } from '../../hooks/use-prune-ready-uploads';
-import { SpaceFilesDropzone } from '../../ui/space-files-dropzone';
+import { SpaceDropzoneEmpty } from '../../ui/space-dropzone-empty';
 import type { MergedSpaceFileItem } from '../../util/get-merged-space-files-with-uploads';
 import type { SpaceWizardNavigate } from '../../util/space-wizard-steps';
 import type { UploadSamples as UploadSamplesConfig } from '../types';
@@ -41,10 +43,15 @@ export function SpaceWizardUpload({
   const hasFiles = items.length > 0;
 
   return (
-    <Stack gap="md">
-      <Stack gap="xs">
-        <SpaceFilesDropzone hasFiles={hasFiles} onAddFiles={(files) => void onAddFiles(files)}>
-          <Stack gap="sm">
+    <Stack gap="regular">
+      <Stack gap="tight">
+        <Dropzone
+          hasFiles={hasFiles}
+          onAddFiles={(files) => void onAddFiles(files)}
+          maxSize={SpaceConfig.FILE_MAX_BYTES}
+          empty={<SpaceDropzoneEmpty />}
+        >
+          <Stack gap="regular">
             <UploadHeader count={items.length} />
             <UploadGrid
               items={items}
@@ -54,7 +61,7 @@ export function SpaceWizardUpload({
               onRemove={onRemoveFile}
             />
           </Stack>
-        </SpaceFilesDropzone>
+        </Dropzone>
 
         {samples && !hasFiles ? (
           <UploadSamples previews={samples.previews} load={samples.load} onAddFiles={onAddFiles} />

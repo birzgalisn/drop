@@ -28,11 +28,11 @@ export interface UseShareUnlockResult {
   /** Null until the PIN is accepted. */
   unlockedPin: string | null;
   isUnlocking: boolean;
-  /** Bumps to remount PinInput after a failed attempt (resets focus to first cell). */
+  /** Bumps to remount Pin after a failed attempt (resets focus to first cell). */
   pinResetKey: number;
   form: UseAppFormReturn<UnlockShareFormValues>;
   unlock: (pin: string) => Promise<boolean>;
-  /** Clear the PIN, surface the error, and remount the PinInput. */
+  /** Clear the PIN, surface the error, and remount Pin. */
   resetPinAfterError: (error: unknown) => void;
 }
 
@@ -59,7 +59,7 @@ export function useShareUnlock({ token }: { token: string }): UseShareUnlockResu
   };
 
   const unlock = async (pin: string) => {
-    const { data } = await unlockShare({ variables: { token, pin } });
+    const { data } = await unlockShare({ variables: { input: { token, pin } } });
 
     if (data?.unlockShare.ok) {
       writePinToHash(pin);

@@ -1,3 +1,4 @@
+import { FileTable } from '@repo/react/design-system';
 import { ShareViewer } from '@repo/react/spaces/share-viewer';
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -7,9 +8,11 @@ import {
 } from '../../shared/hooks/use-space-image-search';
 import { useSpaceNavigation } from '../../shared/hooks/use-space-navigation';
 import { getApiBaseUrl } from '../../shared/util/get-api-base-url';
+import { routeHead } from '../../shared/util/route-head';
 
 export const Route = createFileRoute('/s/$token')({
   validateSearch: spaceImageSearchSchema,
+  head: () => routeHead('Shared'),
   component: SharePage,
 });
 
@@ -19,13 +22,13 @@ function SharePage() {
   const { goHome, goToManage } = useSpaceNavigation();
 
   return (
-    <ShareViewer
-      token={token}
-      apiBaseUrl={getApiBaseUrl()}
-      activeImageId={activeImageId}
-      onActiveImageIdChange={onActiveImageIdChange}
-      onHome={goHome}
-      onManage={goToManage}
-    />
+    <FileTable.ImageView.Search activeId={activeImageId} onActiveIdChange={onActiveImageIdChange}>
+      <ShareViewer
+        token={token}
+        apiBaseUrl={getApiBaseUrl()}
+        onHome={goHome}
+        onManage={goToManage}
+      />
+    </FileTable.ImageView.Search>
   );
 }

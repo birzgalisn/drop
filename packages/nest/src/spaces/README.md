@@ -6,19 +6,20 @@ Ephemeral **space** of files → required-PIN **share** link.
 
 | Path                 | Role                                                                                   |
 | -------------------- | -------------------------------------------------------------------------------------- |
-| `use-cases/`         | One verb each; inline Drizzle                                                          |
-| `workflows/`         | Orchestration (create/add/remove/complete upload/create share)                         |
-| `tus/hooks/`         | Registers `UploadType.SpaceFile` on `/files`                                           |
+| `use-cases/`         | One verb each; inline Drizzle; optional `db` for a caller-owned transaction            |
+| `workflows/`         | Orchestration (create/add/remove/reorder/complete upload/share/get/unlock)             |
+| `tus/hooks/`         | Registers `UploadType.SpaceFile` on `/files`; author cookie on create                  |
 | `tus/schemas/`       | Domain tus metadata Zod contracts                                                      |
 | `models/`            | GraphQL ObjectTypes (return rows; `@ResolveField` for derived; no `@Field` on secrets) |
 | `controllers/`       | Share unlock + file/zip downloads                                                      |
 | `jobs/`              | Thumbnail generation (BullMQ) + daily draft/expired-space purge                        |
 | `spaces.resolver.ts` | GraphQL entry                                                                          |
+| `spaces.module.ts`   | Domain wiring (queue register only; Bull/Schedule roots live in `apps/api`)            |
 
 ## Flow
 
 1. `addSpaceFiles` creates draft space (author cookie) + file rows.
-2. Client uploads via tus `/files` with `uploadType=space_file`.
+2. Client uploads via tus `/files` with `uploadType=space_file` (author cookie required).
 3. Finish → claim + promote to `/drop-media/spaces/{spaceId}/` → thumb/preview WebP
    derivatives alongside the original (`{fileId}.thumb.webp` / `.preview.webp`;
    download still uses the original).
@@ -28,4 +29,4 @@ Ephemeral **space** of files → required-PIN **share** link.
 6. Recipient `/s/:token` unlocks with PIN; downloads via REST.
 7. Daily UTC midnight cron: delete stale drafts + share-expired spaces, `rm -rf` their media dirs.
 
-See `.cursor/rules/` for naming, use-cases, tus, and share access rules.
+Domain conventions: `nest-layers.mdc`, `nest-use-cases.mdc`, `nest-errors.mdc`, `nest-modules.mdc`.

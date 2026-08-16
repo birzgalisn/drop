@@ -1,0 +1,130 @@
+---
+description: Design-system primitives — Mantine inside DS, WithoutStyle, named tokens
+globs:
+  - packages/react/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# Design-system primitives
+
+Features compose named primitives from `@repo/react/design-system`. `@mantine/core` is imported only in those primitive files and `ui-provider/`.
+
+```tsx
+import { Button, Group, Input, Panel, Pin, Stack, Text } from '@repo/react/design-system';
+```
+
+A new visual job → `design-system/<name>/feature/<name>.tsx`, re-exported from `design-system/index.ts`.
+
+## Public props
+
+Look lives in the primitive. Callers get a small typed surface: `WithoutStyle` plus `Pick` of the Mantine keys that primitive actually uses. Do not alias the full Mantine props type (`WithoutStyle<MantineTextProps>`). Copy uses `Text` `variant` — not size / color / weight knobs.
+
+```ts
+export type WithoutStyle<T> = Omit<T, 'className' | 'classNames' | 'style' | 'styles'>;
+
+export type PinProps = WithoutStyle<
+  Pick<PinInputProps, 'length' | 'value' | 'mask' | 'onChange' | 'onComplete'>
+>;
+```
+
+`Pick` only keys that exist on that Mantine type. `overflow` is not on `BoxProps`; polymorphic `component` is not `keyof BoxProps`. Picking a missing key collapses the type and makes every prop look required. Add `component` as a tag union outside `Pick` (`'div' | 'span' | 'main'`).
+
+If a Mantine field is remapped to a token (`Stack` / `Group` `gap`, `Button` `variant`, `Text` `variant`), omit it from the `Pick` and add the token type. Defaults (`radius`, `type="number"`) stay inside the primitive.
+
+Layout primitives (`Stack` / `Group` / `Box`) also take `className` so design-system CSS modules can target them. Features still do not pass `className` / `style`.
+
+```tsx
+export type StackProps = WithoutStyle<
+  Pick<
+    MantineStackProps,
+    'align' | 'justify' | 'flex' | 'miw' | 'mih' | 'maw' | 'p' | 'display' | 'pt' | 'ta'
+  >
+> & {
+  gap?: Gap;
+  className?: string;
+};
+
+export function Stack({ gap = 'regular', ...props }: StackProps) {
+  return <MantineStack gap={GAP[gap]} {...props} />;
+}
+```
+
+`Group` uses the same `gap` token.
+
+## Tokens
+
+| Primitive | Token | Values |
+| --- | --- | --- |
+| `Stack` / `Group` `gap` | rhythm | `tight` (clustered), `regular` (default), `loose` (page) |
+| radius | corners | `none` / `sm` / `md` / `lg` / `xl` → `--radius-*` |
+| Phosphor `size` | icon | `ICON_SIZE.sm` 12 / `md` 14 / `lg` 16 / `xl` 20 |
+| `Button` `variant` | emphasis | `solid` → Mantine `filled`, `subtle` → `light` |
+| `IconButton` `variant` | emphasis | `subtle` / `solid` / `default` / `ghost` |
+| `IconButton` `tone` | intent | `neutral` (default) / `danger` |
+| `Text` `variant` | copy role | `title` / `muted` (default) / `label` / `error` |
+| `Pin` `mask` | hide digits | `mask` → password cells |
+| `Pin` `readOnly` | PIN readout | mono digits; not a `Text` variant |
+
+`Text` `variant` is the copy role — pick one, do not restyle with size / color / weight:
+
+| variant | Job |
+| --- | --- |
+| `title` | Headings |
+| `muted` | Supporting copy (default) |
+| `label` | Field or file name |
+| `error` | Field error |
+
+```ts
+export const GAP = {
+  tight: 'var(--gap-tight)',
+  regular: 'var(--gap-regular)',
+  loose: 'var(--gap-loose)',
+} as const;
+
+export type Gap = keyof typeof GAP;
+```
+
+`--gap-*`, `--radius-*`, `--text-xs` / `--text-sm`, `--font-sans` / `--font-mono` / `--font-heading`, `--accent`, and `--bg` / `--surface` / `--elevated` / `--border` / `--text` / `--muted` live on `:root` in the theme stylesheet. Mantine radius vars are aliases of `--radius-*` so Button / Paper follow the same scale. Palettes (`sand`, `graphite`) and heading sizes stay in `createTheme` — Mantine still needs those. Component look lives on the primitive, not in `theme.components`.
+
+## Catalog
+
+| Primitive | Job |
+| --- | --- |
+| `Stack` | Vertical flow |
+| `Group` | Horizontal flow |
+| `Center` | Center a child |
+| `Container` | Page column |
+| `Box` | Box-model escape hatch |
+| `Panel` | Bordered surface (`tone` + `Stack`) |
+| `Text` | Copy (`variant` token) |
+| `Anchor` | Accent text link |
+| `DotSeparator` | Inline `·` |
+| `Button` | Click / submit |
+| `IconButton` | Icon-only control (`variant`, `tone`; `href` opens a new tab) |
+| `Input` | Single-line text |
+| `Pin` | Digit cells; `readOnly` readout |
+| `Image` | Raster image |
+| `Paper` | Raised surface |
+| `NotificationsProvider` | Toast host |
+| `Background` | Page atmosphere |
+| `Stepper` | Step track (`size`: `narrow` / `regular` / `wide`) |
+
+## Assemble
+
+```tsx
+<Panel>
+  <Stack gap="regular">
+    <Text variant="title">Section title</Text>
+    <Input value={url} readOnly />
+    <Group justify="space-between" align="center">
+      <Text>{id}</Text>
+      <Button variant="subtle" onClick={onCopy}>Copy link</Button>
+    </Group>
+  </Stack>
+</Panel>
+```
+
+`Text` `variant` is the copy role. Alignment and max-width live on `Stack` (`ta`, `maw`). `truncate` is the only extra on `label` (file names).
+
+Vertical rhythm is `Stack` `gap`. Horizontal alignment is `Group` `justify` / `align`. Sibling spacing is the parent’s `gap`.

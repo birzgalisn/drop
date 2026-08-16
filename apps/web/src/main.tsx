@@ -1,5 +1,5 @@
 import { ApolloProvider } from '@apollo/client/react';
-import { Notifications, UiProvider } from '@repo/react/design-system';
+import { NotificationsProvider, UiProvider } from '@repo/react/design-system';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -16,12 +16,7 @@ async function bootstrap() {
   void createRoot(container).render(
     <StrictMode>
       <UiProvider>
-        <Notifications
-          position="bottom-right"
-          containerWidth={360}
-          /* Upload toast can be tall; Mantine’s default 200px wrapper clips it into the next toast. */
-          notificationMaxHeight="calc(100dvh - 2rem)"
-        />
+        <NotificationsProvider />
         <ApolloProvider client={apolloClient}>
           <Router />
         </ApolloProvider>

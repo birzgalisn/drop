@@ -1,7 +1,11 @@
-import { Box, type BoxProps } from '@mantine/core';
+import { Box, type BoxProps } from '../../box/feature/box';
 
-export type MediaPlaceholderProps = BoxProps;
+import classes from './media-placeholder.module.css';
 
-export function MediaPlaceholder({ className, ...rest }: MediaPlaceholderProps) {
-  return <Box className={className ?? 'drop-media-placeholder'} {...rest} />;
+export type MediaPlaceholderProps = Pick<BoxProps, 'w' | 'h' | 'pos' | 'inset' | 'flex'> & {
+  'aria-hidden'?: boolean;
+};
+
+export function MediaPlaceholder(props: MediaPlaceholderProps) {
+  return <Box className={classes.root} {...props} />;
 }

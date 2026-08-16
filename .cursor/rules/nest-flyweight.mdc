@@ -1,0 +1,59 @@
+---
+description: Flyweight — share immutable intrinsic state across many objects
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Flyweight
+
+Split **intrinsic** (shared, immutable) state from **extrinsic** (per-instance) state. Cache the shared pieces.
+
+## Anatomy
+
+- Flyweight: intrinsic fields only.
+- Context: unique fields + reference to the flyweight.
+- Factory (singleton provider) that caches by key.
+
+```ts
+export class ProductType {
+  constructor(
+    public readonly typeName: string,
+    public readonly basePrice: number,
+  ) {}
+}
+
+@Injectable()
+export class ProductTypeFactoryService {
+  private readonly cache = new Map<string, ProductType>();
+
+  getProductType(typeName: string, basePrice: number): ProductType {
+    const existing = this.cache.get(typeName);
+    if (existing) return existing;
+    const created = new ProductType(typeName, basePrice);
+    this.cache.set(typeName, created);
+    return created;
+  }
+}
+```
+
+`ProductVariant` (sku, color, size) is **not** a provider.
+
+## Nest mapping
+
+Default singleton scope keeps the cache alive (`nest-singleton.mdc`). Do not put mutable per-user data on the flyweight.
+
+In this API, file bytes live on disk and rows in Postgres — that is already sharing. Flyweight is for **large in-memory object counts** (catalog variants, tile metadata). Do not cache `SpaceFile` rows in a process-wide Map unless there is a measured memory problem; the DB is the source of truth.
+
+## When to use
+
+- Huge numbers of objects, most fields identical.
+- Intrinsic state is immutable.
+
+## When not to use
+
+- Small N; a row per variant is fine.
+- “Shared” state mutates per context — that is a bug, not a flyweight.
+
+Related: `nest-singleton.mdc`, `nest-composite.mdc`, `nest-factory-method.mdc`.

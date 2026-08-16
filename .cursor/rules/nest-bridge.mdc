@@ -1,0 +1,75 @@
+---
+description: Bridge — split two independent axes (abstraction vs implementation)
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Bridge
+
+Two dimensions that vary independently (notification *type* × delivery *channel*). Compose them at runtime instead of `OrderConfirmationEmail`, `OrderConfirmationSms`, …
+
+Adapter makes an existing API fit. Bridge is designed up front so **both** sides extend without an N×M class grid.
+
+## Anatomy
+
+- Implementor interface (`NotificationSender.send`).
+- Concrete implementors (`EmailSender`, `SmsSender`) — often providers.
+- Abstraction holds a sender; refined abstractions supply content.
+
+```ts
+export abstract class Notification {
+  constructor(protected readonly sender: NotificationSender) {}
+
+  abstract buildSubject(): string;
+  abstract buildBody(): string;
+
+  notify(to: string) {
+    return this.sender.send(to, this.buildSubject(), this.buildBody());
+  }
+}
+
+export class OrderConfirmationNotification extends Notification {
+  constructor(sender: NotificationSender, private readonly orderId: string) {
+    super(sender);
+  }
+
+  buildSubject() {
+    return `Order Confirmation - #${this.orderId}`;
+  }
+
+  buildBody() {
+    return `Thank you for order #${this.orderId}.`;
+  }
+}
+```
+
+Wire at the edge (workflow / service), not inside the abstraction:
+
+```ts
+const sender = this.senders[channel];
+const notification =
+  type === 'shipping'
+    ? new ShippingUpdateNotification(sender, orderId)
+    : new OrderConfirmationNotification(sender, orderId);
+return notification.notify(to);
+```
+
+## Nest mapping
+
+Senders can be singleton providers (SMTP client). Abstractions that close over `orderId` are **plain classes** created per call — do not register them as singletons.
+
+Future media backends (local disk vs object storage) behind `MediaStorageService` is Bridge **if** high-level operations and storage drivers both grow. If there is only one driver, a single service is enough.
+
+## When to use
+
+- Two (or more) independent axes; combinatorial subclasses would explode.
+- Swap implementation at runtime (user prefers SMS).
+
+## When not to use
+
+- One axis of variation → Strategy or a single interface.
+- Abstraction and implementation always change together.
+
+Related: `nest-adapter.mdc`, `nest-strategy.mdc`, `nest-abstract-factory.mdc`.

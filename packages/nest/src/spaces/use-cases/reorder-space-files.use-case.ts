@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AppError } from '@repo/shared';
 import { and, eq, inArray, ne } from 'drizzle-orm';
 
+import type { UseCase } from '../../common';
 import { type DrizzleClient, DrizzleService, SpaceFileStatus, spaceFiles } from '../../drizzle';
 
 export interface ReorderSpaceFileEntry {
@@ -15,7 +16,7 @@ export interface ReorderSpaceFilesInput {
 }
 
 @Injectable()
-export class ReorderSpaceFilesUseCase {
+export class ReorderSpaceFilesUseCase implements UseCase<ReorderSpaceFilesInput, void> {
   constructor(private readonly drizzle: DrizzleService) {}
 
   async execute(input: ReorderSpaceFilesInput, db?: DrizzleClient): Promise<void> {

@@ -5,7 +5,8 @@ import type { Upload } from '@tus/server';
 import { SpaceFileStatus } from '../../../drizzle';
 import { MediaStorageService } from '../../../media';
 import { TusHandlerRegistry, type TusUploadHandler } from '../../../tus';
-import { FindSpaceFileByIdUseCase } from '../../use-cases';
+import { SpaceContext } from '../../services/space-context.service';
+import { FindSpaceByIdUseCase, FindSpaceFileByIdUseCase } from '../../use-cases';
 import { CompleteSpaceFileUploadWorkflow } from '../../workflows/complete-space-file-upload.workflow';
 import {
   type SpaceFileUploadMetadata,
@@ -31,7 +32,9 @@ export class SpaceFilesTusHooks implements TusUploadHandler, OnModuleInit {
     private readonly registry: TusHandlerRegistry,
     private readonly media: MediaStorageService,
     private readonly findFile: FindSpaceFileByIdUseCase,
+    private readonly findSpaceById: FindSpaceByIdUseCase,
     private readonly completeUpload: CompleteSpaceFileUploadWorkflow,
+    private readonly spaceContext: SpaceContext,
   ) {}
 
   onModuleInit(): void {
@@ -39,8 +42,13 @@ export class SpaceFilesTusHooks implements TusUploadHandler, OnModuleInit {
     this.logger.log(`Registered tus handler for "${UploadType.SpaceFile}"`);
   }
 
-  async onUploadCreate(_req: unknown, upload: Upload): Promise<void> {
+  async onUploadCreate(req: unknown, upload: Upload): Promise<void> {
     const metadata = this.parseMetadata(upload);
+    const authorKey = this.spaceContext.readAuthorKey(req);
+
+    if (!authorKey) {
+      throw AppError.unauthorized('Author cookie is required');
+    }
 
     if (typeof upload.size === 'number') {
       await this.media.ensureDiskHeadroomFor(upload.size);
@@ -54,6 +62,12 @@ export class SpaceFilesTusHooks implements TusUploadHandler, OnModuleInit {
 
     if (file.spaceId !== metadata.spaceId) {
       throw AppError.badRequest('File does not belong to this space');
+    }
+
+    const space = await this.findSpaceById.execute(file.spaceId);
+
+    if (!space || space.authorKey !== authorKey) {
+      throw AppError.unauthorized('You are not the author of this space');
     }
 
     if (file.mimeType !== metadata.mimeType) {

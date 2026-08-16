@@ -1,0 +1,9 @@
+.content {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.body {
+  padding: 0;
+}

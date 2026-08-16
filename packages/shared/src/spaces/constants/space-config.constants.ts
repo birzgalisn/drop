@@ -20,12 +20,6 @@ export class SpaceConfig {
 
   static readonly ACCEPTED_MIME_TYPE_SET = new Set<string>(SpaceConfig.ACCEPTED_MIME_TYPES);
 
-  /** Dropzone / accept map for Mantine. */
-  static readonly DROPZONE_ACCEPT = {
-    'image/jpeg': ['.jpg', '.jpeg'],
-    'image/png': ['.png'],
-  } as const;
-
   /**
    * Derivative image widths (px). Generated as WebP on upload complete.
    * - thumb: list / grid cards

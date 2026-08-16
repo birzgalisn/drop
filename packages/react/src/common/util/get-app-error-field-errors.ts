@@ -1,5 +1,5 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
-import { AppError, type FieldError } from '@repo/shared';
+import { AppError, AppErrorCodes, type FieldError } from '@repo/shared';
 
 /**
  * Pulls our shared {@link FieldError} contract out of any error surfaced by
@@ -33,4 +33,20 @@ export function getAppErrorMessage(error: unknown): string {
   }
 
   return 'Something went wrong. Please try again.';
+}
+
+/** HTTP status from our AppError contract on a GraphQL error, if present. */
+export function getAppErrorHttpStatus(error: unknown): number | undefined {
+  if (!CombinedGraphQLErrors.is(error)) {
+    return undefined;
+  }
+
+  const [first] = error.errors;
+  const extensions = AppError.parseExtensions(first?.extensions);
+
+  if (!extensions) {
+    return undefined;
+  }
+
+  return AppErrorCodes.HTTP_STATUS[extensions.code];
 }

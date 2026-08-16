@@ -7,10 +7,8 @@ import { SpaceEventsService } from '../services/space-events.service';
 import { SpaceThumbnailsService } from '../services/space-thumbnails.service';
 import {
   ClaimSpaceFileUploadUseCase,
-  FindShareBySpaceIdUseCase,
-  FindSpaceByIdUseCase,
   FindSpaceFileByIdUseCase,
-  ListSpaceFilesUseCase,
+  LoadAuthoredSpaceUseCase,
 } from '../use-cases';
 
 export interface CompleteSpaceFileUploadWorkflowInput {
@@ -32,9 +30,7 @@ export class CompleteSpaceFileUploadWorkflow {
   constructor(
     private readonly findFile: FindSpaceFileByIdUseCase,
     private readonly claimUpload: ClaimSpaceFileUploadUseCase,
-    private readonly findSpaceById: FindSpaceByIdUseCase,
-    private readonly listFiles: ListSpaceFilesUseCase,
-    private readonly findShareBySpaceId: FindShareBySpaceIdUseCase,
+    private readonly loadAuthoredSpace: LoadAuthoredSpaceUseCase,
     private readonly media: MediaStorageService,
     private readonly spaceEvents: SpaceEventsService,
     private readonly thumbnails: SpaceThumbnailsService,
@@ -86,18 +82,12 @@ export class CompleteSpaceFileUploadWorkflow {
   }
 
   private async broadcast(spaceId: string): Promise<void> {
-    const space = await this.findSpaceById.execute(spaceId);
+    const presented = await this.loadAuthoredSpace.forSpaceId(spaceId);
 
-    if (!space) {
+    if (!presented) {
       return;
     }
 
-    const [files, share] = await Promise.all([
-      this.listFiles.execute({ spaceId }),
-      this.findShareBySpaceId.execute(spaceId),
-    ]);
-    await this.spaceEvents.broadcastSpaceUpdated(
-      Object.assign(space, { files, share: share ?? null }),
-    );
+    await this.spaceEvents.broadcastSpaceUpdated(presented);
   }
 }

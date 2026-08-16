@@ -12,6 +12,7 @@ import {
   getMergedSpaceFilesWithUploads,
   type MergedSpaceFileItem,
 } from '../util/get-merged-space-files-with-uploads';
+import { attachMergedFileMedia } from '../util/merged-file-media';
 import { removeSpaceFiles } from '../util/remove-space-files';
 import { useSpaceUploadStore, type SpaceUploadItem } from '../util/upload-space-files-tus';
 import { validateSpaceFiles } from '../util/validate-space-files';
@@ -40,6 +41,7 @@ export interface UseSpaceFilesResult {
 }
 
 const EMPTY_UPLOADS: SpaceUploadItem[] = [];
+const EMPTY_FILES: NonNullable<SpaceFieldsFragment['files']> = [];
 
 /** Files of one space plus the upload actions that mutate them. */
 export function useSpaceFiles(options: UseSpaceFilesOptions): UseSpaceFilesResult {
@@ -62,24 +64,14 @@ export function useSpaceFiles(options: UseSpaceFilesOptions): UseSpaceFilesResul
   });
 
   const space = data?.space ?? null;
-  const serverFiles = space?.files ?? [];
+  const serverFiles = space?.files ?? EMPTY_FILES;
   const allUploads = useSpaceUploadStore((state) => state.uploads);
 
-  const uploads = (() => {
-    if (!spaceId) {
-      return includePendingUploads ? allUploads : EMPTY_UPLOADS;
-    }
+  const uploads = getSpaceUploads({ allUploads, spaceId, includePendingUploads });
+  const merged = getMergedSpaceFilesWithUploads({ files: serverFiles, uploads });
+  const items = attachMergedFileMedia({ items: merged, spaceId, apiBaseUrl });
 
-    return allUploads.filter((upload) =>
-      includePendingUploads
-        ? upload.spaceId === spaceId || upload.spaceId === 'pending'
-        : upload.spaceId === spaceId,
-    );
-  })();
-
-  const items = getMergedSpaceFilesWithUploads({ files: serverFiles, uploads });
-
-  const addFiles = async (incoming: File[]) => {
+  const handleAddFiles = async (incoming: File[]) => {
     const { accepted, errors } = validateSpaceFiles({ incoming, existingFiles: serverFiles });
 
     for (const message of errors) {
@@ -109,7 +101,7 @@ export function useSpaceFiles(options: UseSpaceFilesOptions): UseSpaceFilesResul
     }
   };
 
-  const removeFiles = async (fileIds: string[]) => {
+  const handleRemoveFiles = async (fileIds: string[]) => {
     try {
       await removeSpaceFiles({
         fileIds,
@@ -122,8 +114,8 @@ export function useSpaceFiles(options: UseSpaceFilesOptions): UseSpaceFilesResul
     }
   };
 
-  const removeFile = async (fileId: string) => {
-    await removeFiles([fileId]);
+  const handleRemoveFile = async (fileId: string) => {
+    await handleRemoveFiles([fileId]);
   };
 
   return {
@@ -133,8 +125,30 @@ export function useSpaceFiles(options: UseSpaceFilesOptions): UseSpaceFilesResul
     loading,
     error: error ?? undefined,
     removing,
-    addFiles,
-    removeFile,
-    removeFiles,
+    addFiles: handleAddFiles,
+    removeFile: handleRemoveFile,
+    removeFiles: handleRemoveFiles,
   };
+}
+
+function getSpaceUploads({
+  allUploads,
+  spaceId,
+  includePendingUploads,
+}: {
+  allUploads: SpaceUploadItem[];
+  spaceId?: string;
+  includePendingUploads: boolean;
+}) {
+  if (!spaceId) {
+    return includePendingUploads ? allUploads : EMPTY_UPLOADS;
+  }
+
+  const next = allUploads.filter((upload) =>
+    includePendingUploads
+      ? upload.spaceId === spaceId || upload.spaceId === 'pending'
+      : upload.spaceId === spaceId,
+  );
+
+  return next.length === 0 ? EMPTY_UPLOADS : next;
 }

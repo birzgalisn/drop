@@ -23,6 +23,8 @@ export { ListSpaceFilesUseCase } from './list-space-files.use-case';
 export type { ListSpaceFilesInput } from './list-space-files.use-case';
 export { ListReadySpaceFilesUseCase } from './list-ready-space-files.use-case';
 export type { ListReadySpaceFilesInput } from './list-ready-space-files.use-case';
+export { LoadAuthoredSpaceUseCase } from './load-authored-space.use-case';
+export type { LoadAuthoredSpaceInput } from './load-authored-space.use-case';
 export { MaxSpaceFileSortOrderUseCase } from './max-space-file-sort-order.use-case';
 export { MarkSpaceFileThumbnailsReadyUseCase } from './mark-space-file-thumbnails-ready.use-case';
 export type { MarkSpaceFileThumbnailsReadyInput } from './mark-space-file-thumbnails-ready.use-case';

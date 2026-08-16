@@ -1,0 +1,78 @@
+---
+description: Composite — uniform operations on trees of parts and wholes
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Composite
+
+Treat leaves and groups the same: `getPrice()`, `getCount()`, `display()` work on a product **and** a category of products.
+
+## Anatomy
+
+- Component interface.
+- Leaf (no children).
+- Composite (list of components; delegates recursively).
+- A service **builds** the tree; it is a provider. Nodes are plain classes.
+
+```ts
+export interface CatalogComponent {
+  getName(): string;
+  getPrice(): number;
+  getCount(): number;
+}
+
+export class ProductItem implements CatalogComponent {
+  constructor(
+    private readonly name: string,
+    private readonly price: number,
+  ) {}
+
+  getName() {
+    return this.name;
+  }
+  getPrice() {
+    return this.price;
+  }
+  getCount() {
+    return 1;
+  }
+}
+
+export class Category implements CatalogComponent {
+  private readonly children: CatalogComponent[] = [];
+
+  add(child: CatalogComponent) {
+    this.children.push(child);
+  }
+
+  getPrice() {
+    return this.children.reduce((sum, child) => sum + child.getPrice(), 0);
+  }
+
+  getCount() {
+    return this.children.reduce((count, child) => count + child.getCount(), 0);
+  }
+}
+```
+
+## Nest mapping
+
+Do not register `ProductItem` / `Category` as providers. A `CatalogService.buildCatalog()` (or a use-case that loads rows then assembles the tree) is enough.
+
+This repo’s spaces/files are **flat lists** with `sortOrder`, not nested catalogs. Do not introduce Composite for `SpaceFile[]`.
+
+## When to use
+
+- Real part–whole trees (menus, nested categories, folder trees).
+- The same operation should recurse without `if (isFolder)`.
+
+## When not to use
+
+- Flat arrays — `map` / `reduce`.
+- Leaves and groups need different APIs and pretending they are the same hides bugs.
+- You need the type system to forbid `add` on leaves.
+
+Related: `nest-decorator.mdc`, `nest-iterator.mdc`, `nest-visitor.mdc`.

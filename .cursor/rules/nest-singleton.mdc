@@ -1,0 +1,54 @@
+---
+description: Singleton — default Nest provider scope, no getInstance()
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Singleton
+
+Ensure one shared instance. In Nest, **this is the default** for `@Injectable()` providers registered on a module.
+
+Do **not** write private constructors, static `getInstance()`, or module-level mutable registries.
+
+## Nest mapping
+
+The IoC container is the registry. First injection creates the instance; every later consumer gets the same object (within the module graph that exports it).
+
+```ts
+@Injectable()
+export class DrizzleService implements OnModuleDestroy {
+  private readonly pool: Pool;
+  readonly db: ReturnType<typeof drizzle<typeof schema>>;
+
+  constructor(@Inject(drizzleConfig.KEY) config: ConfigType<typeof drizzleConfig>) {
+    this.pool = new Pool({ connectionString: config.connectionString });
+    this.db = drizzle({ client: this.pool, schema });
+  }
+}
+```
+
+One pool, one client. Use-cases inject `DrizzleService`; they do not construct `Pool`.
+
+## Other scopes
+
+```ts
+@Injectable({ scope: Scope.REQUEST })  // new instance per request
+@Injectable({ scope: Scope.TRANSIENT }) // new instance per injection site
+```
+
+Use request/transient when the class holds **per-request** or **per-consumer** state (a mutable builder, a request-bound cart). Shared caches, pools, and config stay default singleton.
+
+## When to use
+
+- Expensive init (DB pool, Redis, tus registry).
+- One coordinator (events, metrics, in-memory handler map).
+
+## When not to use
+
+- Stateless pure helpers — `util/` functions, not providers (`pin-hasher.util.ts`).
+- Hidden mutable singleton state that tests must reset — prefer request scope or pass state in.
+- Classic GoF boilerplate alongside Nest DI.
+
+Related: `nest-flyweight.mdc`, `nest-prototype.mdc`, `nest-facade.mdc`.

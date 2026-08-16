@@ -1,0 +1,80 @@
+---
+description: Domain types and constants — small shapes, frozen literals
+globs:
+  - packages/react/**
+  - packages/shared/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# Types and constants
+
+Keep domain shapes small and literals explicit.
+
+## Domain types
+
+```ts
+export type SpaceFile = {
+  id: string;
+  name: string;
+  mimeType: string;
+  sortOrder: number;
+  status: SpaceFileStatus;
+};
+
+export type SpaceFileStatus = 'uploading' | 'ready' | 'error';
+
+export type SpaceFileRow = {
+  file: SpaceFile;
+  previewSrc?: string;
+};
+```
+
+Placement:
+
+- Shared domain shapes → `@repo/shared` when Nest and React both need them.
+- FE-only shapes → `util/types.ts` (or `util/<name>.ts` when one type owns the file).
+- Action unions + creators → `util/types.ts` + `util/<action-name>.ts`.
+- Reused component props → export alias from the component module (`EditableTextProps`).
+
+## Constants
+
+`constants/` holds frozen tables and defaults:
+
+```ts
+export const fileDefaults = Object.freeze({
+  name: 'Untitled',
+  status: 'ready',
+} satisfies Pick<SpaceFile, 'name' | 'status'>);
+
+const SPACE_FILE_STATUSES = Object.freeze([
+  'uploading',
+  'ready',
+  'error',
+] as const);
+
+export type SpaceFileStatus = (typeof SPACE_FILE_STATUSES)[number];
+```
+
+Domain `constants/` folder or a `util/` module. No `constants.ts` sitting at the domain root.
+
+## `as const` and `satisfies`
+
+```ts
+return { type: 'recreate', payload } as const;
+
+return { files: rows, dispatch } as const;
+return { value, handleValueChange } as const;
+
+return { id, name, sortOrder, status: 'ready' } satisfies SpaceFile;
+```
+
+Use `satisfies` when building objects that must match a type and keep literal inference. Use `as const` on tuples/unions you want narrowed.
+
+## Defaults for UI
+
+Leaves read defaults from constants when data is missing:
+
+```ts
+file.name ?? fileDefaults.name
+```

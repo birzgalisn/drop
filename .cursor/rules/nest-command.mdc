@@ -1,0 +1,73 @@
+---
+description: Command — encapsulate a request; UseCase.execute is the command
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Command
+
+Turn a request into an object with `execute()` (and optionally `undo()`), so you can queue, log, or undo it.
+
+## Anatomy
+
+- Command interface.
+- Concrete commands hold the args + the work (or a receiver).
+- Invoker runs commands and may keep a history stack.
+
+```ts
+export interface Command {
+  readonly name: string;
+  execute(): CommandResult;
+  undo(): CommandResult;
+}
+
+@Injectable()
+export class OrderCommandInvokerService {
+  private readonly executed: Command[] = [];
+
+  executeCommand(command: Command): CommandResult {
+    const result = command.execute();
+    if (result.success) this.executed.push(command);
+    return result;
+  }
+}
+```
+
+Commands created **per request** (`new PlaceOrderCommand(id, amount)`). The invoker may be a singleton **only** if history is process-local and you accept that (usually you do not — persist instead).
+
+## Nest mapping
+
+This repo already uses Command as **`UseCase`**:
+
+```ts
+export interface UseCase<Input = void, Output = void> {
+  execute(...args: UseCaseExecuteArgs<Input>): Output | Promise<Output>;
+}
+
+@Injectable()
+export class CreateSpaceUseCase implements UseCase<CreateSpaceInput, SpaceRow> {
+  async execute(input: CreateSpaceInput, db?: DrizzleClient): Promise<SpaceRow> {
+    // one verb, inline Drizzle
+  }
+}
+```
+
+- Resolvers/workflows are invokers.
+- BullMQ processors (`GenerateThumbnailsProcessor`) queue a command-like job payload.
+- Do not add a second `Command` type beside `UseCase` for ordinary writes.
+
+Undo/history in memory on a singleton is wrong for multi-instance API. Persist events or use Memento in a store.
+
+## When to use
+
+- Queue / retry / audit of operations.
+- Explicit undo (pair with `nest-memento.mdc`).
+
+## When not to use
+
+- Trivial reads — a use-case or query is enough.
+- Extra command classes that only wrap one use-case call.
+
+Related: `nest-facade.mdc`, `nest-memento.mdc`, `nest-strategy.mdc`.

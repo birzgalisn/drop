@@ -8,7 +8,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--mantine-color-dimmed);
+  color: var(--muted);
   transition:
     color 160ms ease,
     transform 160ms ease,
@@ -16,7 +16,7 @@
 }
 
 .root:hover:not(:disabled) {
-  color: var(--mantine-color-text);
+  color: var(--text);
 }
 
 .root:hover:not(:disabled) .fan {
@@ -29,9 +29,9 @@
 }
 
 .root:focus-visible {
-  outline: 2px solid var(--mantine-color-sand-5);
+  outline: 2px solid var(--accent);
   outline-offset: 4px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .arrow {
@@ -62,10 +62,10 @@
   width: 5rem;
   height: 5rem;
   margin-left: -2.5rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   object-fit: cover;
-  background: var(--drop-surface, var(--mantine-color-body));
-  border: 1px solid var(--drop-border, var(--mantine-color-default-border));
+  background: var(--surface);
+  border: 1px solid var(--border);
   box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
   transition: transform 180ms ease;
 }
@@ -91,11 +91,6 @@
 
 .root:hover:not(:disabled) .thumbRight {
   transform: translateX(5.1rem) translateY(0.4rem) rotate(14deg);
-}
-
-.label {
-  font-size: var(--mantine-font-size-sm);
-  line-height: 1.2;
 }
 
 @media (prefers-reduced-motion: reduce) {

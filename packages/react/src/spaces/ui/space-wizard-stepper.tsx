@@ -1,14 +1,9 @@
-import { WizardStepper } from '../../design-system/wizard/ui/wizard-stepper';
+import { Stepper } from '../../design-system/stepper/feature/stepper';
 import {
-  SPACE_WIZARD_STEP_ORDER,
+  SPACE_WIZARD_STEPS,
   type SpaceWizardNavigate,
   type SpaceWizardStep,
 } from '../util/space-wizard-steps';
-
-const STEP_LABELS: Record<SpaceWizardStep, string> = {
-  upload: 'Upload',
-  share: 'Share',
-};
 
 export interface SpaceWizardStepperProps {
   step: SpaceWizardStep;
@@ -24,22 +19,23 @@ export function SpaceWizardStepper({
   hasFiles,
   onNavigate,
 }: SpaceWizardStepperProps) {
-  const activeIndex = SPACE_WIZARD_STEP_ORDER.indexOf(step);
+  const handleStepClick = ({ step: target }: { step: SpaceWizardStep }) => {
+    if (!spaceId) {
+      return;
+    }
+
+    onNavigate({ step: target, spaceId });
+  };
+
+  const handleCanSelectStep = ({ index, activeIndex }: { index: number; activeIndex: number }) =>
+    Boolean(spaceId) && (index <= activeIndex || hasFiles);
 
   return (
-    <WizardStepper
-      steps={SPACE_WIZARD_STEP_ORDER.map((id) => ({ id, label: STEP_LABELS[id] }))}
+    <Stepper
+      steps={SPACE_WIZARD_STEPS}
       activeStep={step}
-      onStepClick={({ step: target, index }) => {
-        if (!spaceId || index === activeIndex) {
-          return;
-        }
-
-        if (index < activeIndex || hasFiles) {
-          onNavigate({ step: target, spaceId });
-        }
-      }}
-      canSelectStep={({ index }) => index <= activeIndex || hasFiles}
+      onStepClick={handleStepClick}
+      canSelectStep={handleCanSelectStep}
     />
   );
 }

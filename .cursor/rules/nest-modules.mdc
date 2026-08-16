@@ -1,0 +1,50 @@
+---
+description: Nest modules — global infra, registerAsync, Symbol tokens, forRoot at compose
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Nest modules
+
+## Global infra
+
+`DrizzleModule`, `MediaModule`, `PubSubModule` are `@Global()`. Domain modules do not re-import them to inject `DrizzleService` / `MediaStorageService`.
+
+`TusModule.registerAsync` and CORS `registerAsync` run at **`apps/api`**. Feature modules register strategies on a registry (`TusHandlerRegistry`) in `onModuleInit`.
+
+## `registerAsync` + tokens
+
+```ts
+export const TUS_OPTIONS = Symbol('TUS_OPTIONS');
+
+TusModule.registerAsync({
+  imports: [...mediaEnvFromConfig.imports],
+  inject: [...mediaEnvFromConfig.inject],
+  useFactory: (media: ConfigType<typeof mediaConfig>) => ({
+    root: media.tusRoot,
+    path: TusConfig.PATH,
+    maxUploadBytes: SpaceConfig.FILE_MAX_BYTES,
+  }),
+});
+```
+
+Env factories use `registerAs` + `.asProvider()`. Shared async options type: `RegisterAsyncOptions`. Tokens live in `tokens/` as `Symbol`s.
+
+## Roots vs feature
+
+| At `apps/api` | In the domain module |
+| --- | --- |
+| `ConfigModule.forRoot` | `ConfigModule.forFeature` when injecting a namespaced config |
+| `BullModule.forRootAsync` | `BullModule.registerQueue` |
+| `ScheduleModule.forRoot` | `@Cron` providers |
+| `TusModule.registerAsync` | `TusUploadHandler` + `registry.register` |
+
+Do not call `forRoot` from `SpacesModule` — a second domain would fight the singleton root.
+
+## Providers
+
+Default **singleton** scope (`nest-singleton.mdc`). Request-scoped pipes (`ShareSessionPipe`) are the exception. GraphQL resolvers stay singleton: `AuthoredSpace` reads cookies from the execution context instead of injecting `REQUEST`.
+
+Related: `nest-layers.mdc`, `nest-strategy.mdc`, `nest-singleton.mdc`.

@@ -1,0 +1,39 @@
+---
+description: Domain throws AppError; transport adapters map GraphQL / HTTP / tus
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Nest errors
+
+Domain (use-cases, workflows, pipes, tus handlers) throws **`AppError`**. Never `HttpException` / `UnauthorizedException` from those layers.
+
+## Boundary
+
+`GraphqlExceptionFilter` (`APP_FILTER`) is the only place that knows GraphQL vs HTTP:
+
+- GraphQL → `GraphqlErrorMapper` (`code`, `fieldErrors` in extensions).
+- HTTP → `HttpError.fromApp` (same `code` / `fieldErrors` on the JSON body).
+- Tus → `TusError.throw` (`status_code` / `body` for `@tus/server`).
+
+```ts
+if (!input.authorKey) {
+  throw AppError.unauthorized('Author cookie is required');
+}
+
+if (!result.success) {
+  throw AppError.zod(result.error);
+}
+```
+
+Validation: attach `new ZodValidationPipe(schema)` on `@Args` / `@Body` / `@Query`.
+
+Unhandled errors become opaque `INTERNAL` on GraphQL; log the original at the filter.
+
+## Cookies and sessions
+
+Pipes (`SpaceAuthorPipe`, `ShareSessionPipe`) throw `AppError`. Cookie **writes** stay at the resolver/controller via `SpaceContext` (HttpOnly, `secure` in production).
+
+Related: `nest-adapter.mdc`, `nest-layers.mdc`.

@@ -1,22 +1,37 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, Badge, Center, Container, Group, Loader, Stack, Text, Title } from '@mantine/core';
+import { Alert, Badge, Loader } from '@mantine/core';
 import { ArrowSquareOutIcon } from '@phosphor-icons/react/ArrowSquareOut';
 
-import { getZipQuery } from '../../../common/util/build-query-string';
-import { openDownload } from '../../../common/util/open-download';
-import { FileExplorer } from '../../../design-system/file-explorer/feature/file-explorer';
+import { Center } from '../../../design-system/center/feature/center';
+import { Container } from '../../../design-system/container/feature/container';
+import { Dropzone } from '../../../design-system/dropzone/feature/dropzone';
+import {
+  FileTable,
+  type UseFileTable,
+  type UseImageView,
+} from '../../../design-system/file-table/feature/file-table';
+import { Group } from '../../../design-system/group/feature/group';
+import { Stack } from '../../../design-system/stack/feature/stack';
+import { useTableContext } from '../../../design-system/table/feature/table';
+import { Text } from '../../../design-system/text/feature/text';
+import { ICON_SIZE } from '../../../design-system/util/icon-size';
 import { DropLogo } from '../../../logo/feature/drop-logo';
 import { SharedSpaceDocument } from '../../data-access/shared-space.generated';
 import { useSharedSpaceLiveUpdates } from '../../hooks/use-space-live-updates';
-import { mapShareViewerFiles } from '../util/map-share-viewer-files';
+import { useShareViewerFileTable } from '../hooks/use-share-viewer-file-table';
+import { useShareViewerImageView } from '../hooks/use-share-viewer-image-view';
+import {
+  getShareViewerFileRows,
+  type ShareViewerFileRow,
+} from '../util/get-share-viewer-file-rows';
+import { openShareZip } from '../util/open-share-zip';
+import { shareViewerFileColumns } from '../util/share-viewer-file-columns';
 
 export interface ShareViewerFilesProps {
   token: string;
   apiBaseUrl: string;
   /** Forwarded to the manage handoff when the viewer is also the author. */
   unlockedPin: string;
-  activeImageId?: string | null;
-  onActiveImageIdChange?: (fileId: string | null) => void;
   onHome: () => void;
   onManage?: (options: { spaceId: string; pin?: string }) => void;
 }
@@ -26,8 +41,6 @@ export function ShareViewerFiles({
   token,
   apiBaseUrl,
   unlockedPin,
-  activeImageId,
-  onActiveImageIdChange,
   onHome,
   onManage,
 }: ShareViewerFilesProps) {
@@ -58,23 +71,33 @@ export function ShareViewerFiles({
     );
   }
 
-  const files = mapShareViewerFiles({
+  const files = getShareViewerFileRows({
     files: sharedSpace.files ?? [],
     token,
     apiBaseUrl,
   });
 
+  const useTable: UseFileTable<ShareViewerFileRow> = ({ rows }) =>
+    useShareViewerFileTable({ rows });
+
+  const useImageView: UseImageView<ShareViewerFileRow> = ({ rows }) =>
+    useShareViewerImageView({
+      rows,
+      token,
+      apiBaseUrl,
+    });
+
   return (
-    <Container size="sm" py={48} pos="relative" style={{ zIndex: 1 }}>
-      <Stack gap="xl">
+    <Container size="sm" py={48}>
+      <Stack gap="loose">
         <Group justify="space-between" align="flex-start" wrap="nowrap">
-          <Stack gap={6}>
-            <DropLogo onHome={onHome} order={3} />
-            <Stack gap={6}>
-              <Title order={2}>Shared with you</Title>
-              <Text c="dimmed" size="sm" maw={420}>
-                Download files or select several for a zip. You cannot change this Drop.
+          <Stack gap="tight">
+            <DropLogo onHome={onHome} size="compact" />
+            <Stack gap="tight" maw={420}>
+              <Text variant="title" component="h1">
+                Shared with you
               </Text>
+              <Text>Download files or select several for a zip.</Text>
             </Stack>
           </Stack>
 
@@ -84,8 +107,7 @@ export function ShareViewerFiles({
               type="button"
               color="sand"
               variant="light"
-              mt={4}
-              rightSection={<ArrowSquareOutIcon size={12} />}
+              rightSection={<ArrowSquareOutIcon size={ICON_SIZE.sm} />}
               style={{ cursor: 'pointer', flexShrink: 0 }}
               onClick={() => onManage({ spaceId: sharedSpace.id, pin: unlockedPin || undefined })}
             >
@@ -94,17 +116,39 @@ export function ShareViewerFiles({
           ) : null}
         </Group>
 
-        <FileExplorer
-          files={files}
-          emptyMessage="No files are available in this space."
-          onZip={(fileIds) => {
-            openDownload(`${apiBaseUrl}/shares/${token}/zip${getZipQuery(fileIds)}`);
-          }}
-          getDownloadHref={(file) => `${apiBaseUrl}/shares/${token}/files/${file.id}`}
-          activeImageId={activeImageId}
-          onActiveImageIdChange={onActiveImageIdChange}
-        />
+        <Dropzone hasFiles={files.length > 0}>
+          <FileTable
+            rows={files}
+            columns={shareViewerFileColumns}
+            useTable={useTable}
+            useImageView={useImageView}
+          >
+            {({ Toolbar, List, ImageView }) => (
+              <>
+                <Toolbar>
+                  <Toolbar.Search placeholder="Search by name" />
+                  <Toolbar.Actions>
+                    <Toolbar.Zip
+                      onZip={(fileIds) => openShareZip({ apiBaseUrl, token, fileIds })}
+                    />
+                  </Toolbar.Actions>
+                </Toolbar>
+                <List empty={<ShareViewerFilesEmpty />} />
+                <ImageView />
+              </>
+            )}
+          </FileTable>
+        </Dropzone>
       </Stack>
     </Container>
+  );
+}
+
+function ShareViewerFilesEmpty() {
+  const table = useTableContext();
+  const hasFiles = table.getCoreRowModel().rows.length > 0;
+
+  return (
+    <Text>{hasFiles ? 'No files match that name.' : 'No files are available in this space.'}</Text>
   );
 }

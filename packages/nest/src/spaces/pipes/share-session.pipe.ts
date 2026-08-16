@@ -1,16 +1,9 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  PipeTransform,
-  Scope,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, PipeTransform, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
-import { SpaceConfig } from '@repo/shared';
+import { AppError } from '@repo/shared';
 import type { FastifyRequest } from 'fastify';
-import '@fastify/cookie';
 
+import { SpaceContext } from '../services/space-context.service';
 import { FindShareByTokenUseCase, type ShareRow } from '../use-cases';
 
 /**
@@ -21,24 +14,25 @@ import { FindShareByTokenUseCase, type ShareRow } from '../use-cases';
 export class ShareSessionPipe implements PipeTransform<string, Promise<ShareRow>> {
   constructor(
     private readonly findShare: FindShareByTokenUseCase,
+    private readonly spaceContext: SpaceContext,
     @Inject(REQUEST) private readonly request: FastifyRequest,
   ) {}
 
   async transform(token: string): Promise<ShareRow> {
-    const session = this.request.cookies?.[SpaceConfig.SHARE_SESSION_COOKIE];
+    const session = this.spaceContext.readShareSession(this.request);
 
     if (!session || session !== token) {
-      throw new UnauthorizedException('Share is locked');
+      throw AppError.unauthorized('Share is locked');
     }
 
     const share = await this.findShare.execute(token);
 
     if (!share) {
-      throw new NotFoundException('Share not found');
+      throw AppError.notFound('Share not found');
     }
 
     if (share.expiresAt.getTime() <= Date.now()) {
-      throw new UnauthorizedException('This share link has expired');
+      throw AppError.unauthorized('This share link has expired');
     }
 
     return share;

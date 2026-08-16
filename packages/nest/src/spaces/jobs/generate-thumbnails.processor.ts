@@ -13,17 +13,11 @@ import {
 import type { Job } from 'bullmq';
 import sharp from 'sharp';
 
-import { DrizzleService } from '../../drizzle';
 import { mediaConfig } from '../../media';
 import { SpaceThumbnails } from '../constants/space-thumbnails.constants';
 import type { GenerateThumbnailsJobData } from '../interfaces/generate-thumbnails-job-data.interface';
 import { SpaceEventsService } from '../services/space-events.service';
-import {
-  FindSpaceByIdUseCase,
-  FindShareBySpaceIdUseCase,
-  ListSpaceFilesUseCase,
-  MarkSpaceFileThumbnailsReadyUseCase,
-} from '../use-cases';
+import { LoadAuthoredSpaceUseCase, MarkSpaceFileThumbnailsReadyUseCase } from '../use-cases';
 
 /**
  * Generates thumb (grid) + preview (viewer) WebP derivatives, persists their
@@ -37,11 +31,8 @@ import {
 export class GenerateThumbnailsProcessor extends WorkerHost {
   constructor(
     @Inject(mediaConfig.KEY) private readonly media: ConfigType<typeof mediaConfig>,
-    private readonly drizzle: DrizzleService,
     private readonly markReady: MarkSpaceFileThumbnailsReadyUseCase,
-    private readonly findSpaceById: FindSpaceByIdUseCase,
-    private readonly listFiles: ListSpaceFilesUseCase,
-    private readonly findShareBySpaceId: FindShareBySpaceIdUseCase,
+    private readonly loadAuthoredSpace: LoadAuthoredSpaceUseCase,
     private readonly spaceEvents: SpaceEventsService,
   ) {
     super();
@@ -94,19 +85,12 @@ export class GenerateThumbnailsProcessor extends WorkerHost {
   }
 
   private async broadcast(spaceId: string): Promise<void> {
-    const space = await this.findSpaceById.execute(spaceId);
+    const presented = await this.loadAuthoredSpace.forSpaceId(spaceId);
 
-    if (!space) {
+    if (!presented) {
       return;
     }
 
-    const [files, share] = await this.drizzle.db.transaction((tx) =>
-      Promise.all([
-        this.listFiles.execute({ spaceId }, tx),
-        this.findShareBySpaceId.execute(spaceId, tx),
-      ]),
-    );
-
-    await this.spaceEvents.broadcastSpaceUpdated(Object.assign(space, { files, share }));
+    await this.spaceEvents.broadcastSpaceUpdated(presented);
   }
 }

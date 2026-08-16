@@ -45,6 +45,6 @@ export class GetSharedSpaceWorkflow {
 
     const files = await this.listReadySpaceFiles.execute({ spaceId: share.spaceId });
 
-    return Object.assign(space, { files });
+    return Object.assign(space, { files, share: null });
   }
 }

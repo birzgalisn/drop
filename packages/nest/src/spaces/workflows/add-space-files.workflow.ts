@@ -6,10 +6,9 @@ import type { AddSpaceFilesResult } from '../models/add-space-files-result.model
 import { SpaceEventsService } from '../services/space-events.service';
 import {
   CountActiveSpaceFilesUseCase,
-  FindShareBySpaceIdUseCase,
   FindSpaceByIdUseCase,
   InsertSpaceFilesUseCase,
-  ListSpaceFilesUseCase,
+  LoadAuthoredSpaceUseCase,
   MaxSpaceFileSortOrderUseCase,
   type SpaceRow,
   SumSpaceFileBytesUseCase,
@@ -39,8 +38,7 @@ export class AddSpaceFilesWorkflow {
     private readonly countFiles: CountActiveSpaceFilesUseCase,
     private readonly maxSortOrder: MaxSpaceFileSortOrderUseCase,
     private readonly insertFiles: InsertSpaceFilesUseCase,
-    private readonly listFiles: ListSpaceFilesUseCase,
-    private readonly findShareBySpaceId: FindShareBySpaceIdUseCase,
+    private readonly loadAuthoredSpace: LoadAuthoredSpaceUseCase,
     private readonly spaceEvents: SpaceEventsService,
   ) {}
 
@@ -68,13 +66,8 @@ export class AddSpaceFilesWorkflow {
           tx,
         );
 
-        const [files, share] = await Promise.all([
-          this.listFiles.execute({ spaceId: target.space.id }, tx),
-          this.findShareBySpaceId.execute(target.space.id, tx),
-        ]);
-
         return {
-          presented: Object.assign(target.space, { files, share: share ?? null }),
+          presented: await this.loadAuthoredSpace.execute({ space: target.space }, tx),
           inserted: insertedRows,
           createdAuthorKey: target.createdAuthorKey,
         };

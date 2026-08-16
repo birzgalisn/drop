@@ -83,6 +83,7 @@ catalog:
   '@swc/core': ^1.15.43
   '@swc/jest': ^0.2.39
   '@tanstack/react-router': ^1.170.18
+  '@tanstack/react-table': ^9.1.2
   '@tanstack/router-cli': ^1.167.21
   '@tanstack/router-plugin': ^1.168.22
   '@tus/file-store': ^2.1.0

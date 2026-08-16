@@ -1,159 +1,43 @@
-import { Box, Image } from '@mantine/core';
-import { useState } from 'react';
-
 import { MediaPlaceholder } from '../ui/media-placeholder';
+import { ProgressiveImageBaseLayer } from '../ui/progressive-image-base-layer';
+import { ProgressiveImageFrame } from '../ui/progressive-image-frame';
+import { ProgressiveImageHiResLayer } from '../ui/progressive-image-hi-res-layer';
+import { getProgressiveImageSources } from '../util/get-progressive-image-sources';
 
-export interface ProgressiveImageProps {
-  lowSrc: string | null;
-  highSrc?: string | null;
+export type ProgressiveImageProps = {
+  src: string | null;
+  preview?: string | null;
   alt: string;
-  objectFit?: 'cover' | 'contain';
-  width?: number | string;
-  height?: number | string;
-  borderRadius?: number | string;
-  onLowError?: () => void;
-}
-
-interface ImageLayerProps {
-  src: string;
-  alt: string;
-  objectFit: 'cover' | 'contain';
-  width?: number | string;
-  height?: number | string;
-  borderRadius?: number | string;
-  onError?: () => void;
-}
-
-function fadeInAfterPaint(onReady: () => void): void {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(onReady);
-  });
-}
-
-function BaseImageLayer({
-  src,
-  alt,
-  objectFit,
-  width,
-  height,
-  borderRadius,
-  onError,
-}: ImageLayerProps) {
-  const [loaded, setLoaded] = useState(false);
-
-  return (
-    <>
-      {!loaded ? (
-        <MediaPlaceholder style={{ position: 'absolute', inset: 0, borderRadius }} aria-hidden />
-      ) : null}
-      <Image
-        src={src}
-        alt={alt}
-        fit={objectFit}
-        radius={borderRadius}
-        decoding="async"
-        draggable={false}
-        onLoad={() => setLoaded(true)}
-        onError={() => onError?.()}
-        pos="absolute"
-        inset={0}
-        w={width ?? '100%'}
-        h={height ?? '100%'}
-        display="block"
-        style={{
-          opacity: loaded ? 1 : 0,
-          transition: 'opacity 220ms ease',
-        }}
-      />
-    </>
-  );
-}
-
-function HiResImageLayer({
-  src,
-  alt,
-  objectFit,
-  width,
-  height,
-  borderRadius,
-}: Omit<ImageLayerProps, 'onError'>) {
-  const [opaque, setOpaque] = useState(false);
-
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      fit={objectFit}
-      radius={borderRadius}
-      decoding="async"
-      draggable={false}
-      onLoad={() => fadeInAfterPaint(() => setOpaque(true))}
-      pos="absolute"
-      inset={0}
-      w={width ?? '100%'}
-      h={height ?? '100%'}
-      display="block"
-      style={{
-        opacity: opaque ? 1 : 0,
-        transition: 'opacity 320ms ease',
-      }}
-    />
-  );
-}
+  fit?: 'cover' | 'contain';
+  onPreviewError?: () => void;
+};
 
 export function ProgressiveImage({
-  lowSrc,
-  highSrc,
+  src,
+  preview,
   alt,
-  objectFit = 'cover',
-  width,
-  height,
-  borderRadius,
-  onLowError,
+  fit = 'cover',
+  onPreviewError,
 }: ProgressiveImageProps) {
-  const baseUrl = lowSrc ?? highSrc ?? null;
-  const hiResSrc = highSrc && highSrc !== lowSrc ? highSrc : null;
+  const { baseSrc, fullSrc } = getProgressiveImageSources({ src, preview });
 
-  if (!baseUrl) {
-    return (
-      <MediaPlaceholder
-        style={{ position: 'absolute', inset: 0, width, height, borderRadius }}
-        aria-hidden
-      />
-    );
+  if (!baseSrc) {
+    return <MediaPlaceholder w="100%" h="100%" aria-hidden />;
   }
 
   return (
-    <Box
-      pos="relative"
-      w={width ?? '100%'}
-      h={height ?? '100%'}
-      style={{
-        overflow: borderRadius !== undefined ? 'hidden' : undefined,
-        borderRadius,
-      }}
-    >
-      <BaseImageLayer
-        key={baseUrl}
-        src={baseUrl}
-        alt={hiResSrc ? '' : alt}
-        objectFit={objectFit}
-        width={width}
-        height={height}
-        borderRadius={borderRadius}
-        onError={onLowError}
+    <ProgressiveImageFrame>
+      <ProgressiveImageBaseLayer
+        key={baseSrc}
+        src={baseSrc}
+        alt={alt}
+        fit={fit}
+        aria-hidden={fullSrc != null}
+        onError={onPreviewError}
       />
-      {hiResSrc ? (
-        <HiResImageLayer
-          key={hiResSrc}
-          src={hiResSrc}
-          alt={alt}
-          objectFit={objectFit}
-          width={width}
-          height={height}
-          borderRadius={borderRadius}
-        />
+      {fullSrc ? (
+        <ProgressiveImageHiResLayer key={fullSrc} src={fullSrc} alt={alt} fit={fit} />
       ) : null}
-    </Box>
+    </ProgressiveImageFrame>
   );
 }

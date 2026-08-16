@@ -1,0 +1,283 @@
+---
+description: End-to-end compound component — files, context, slots, compose edge
+globs:
+  - packages/react/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# Compound component e2e
+
+Build a compound as a **tree of files** inside `feature/` / `ui/` / `util/` / `hooks/`. Principles: `react-composition.mdc`. Folder contract: `react-layers.mdc`.
+
+## 1. Files (one node each, no dangling roots)
+
+```
+design-system/file-explorer/
+  feature/
+    file-explorer.tsx                 ← root: dispatch context + children
+  ui/
+    file-explorer-toolbar.tsx         ← chrome; default children
+    file-explorer-toolbar-title.tsx
+    file-explorer-row.tsx             ← item context + default children
+    file-explorer-row-name.tsx        ← leaf: read context, dispatch
+    file-explorer-row-meta.tsx
+  util/
+    types.ts                          ← SpaceFile, Action
+    rename-file.ts                    ← action creator
+  hooks/
+    use-file-explorer.ts              ← optional local UI state
+```
+
+Domain hook (`spaces/hooks/use-space-files.ts`) owns `useReducer` and imports `Action` from `file-explorer/util/types.ts`.
+
+## 2. Types — `util/types.ts`
+
+```ts
+export type SpaceFile = {
+  id: string;
+  name: string;
+  status: 'uploading' | 'ready' | 'error';
+};
+
+export type Action =
+  | { type: 'rename'; payload: { fileId: string; name: string } };
+
+type ActionPayload<T extends Action['type']> = Extract<
+  Action,
+  { type: T }
+>['payload'];
+
+export type { ActionPayload };
+```
+
+## 3. Root — layout, dispatch context, statics
+
+`feature/file-explorer.tsx`:
+
+```tsx
+import { createContext, useContext } from 'react';
+
+import { Stack } from '../../stack/feature/stack';
+import type { Action } from '../util/types';
+import { FileExplorerRow } from '../ui/file-explorer-row';
+import { FileExplorerToolbar } from '../ui/file-explorer-toolbar';
+
+export const FileExplorerDispatchContext =
+  createContext<React.Dispatch<Action> | null>(null);
+
+export function useFileExplorerDispatch() {
+  const ctx = useContext(FileExplorerDispatchContext);
+  if (!ctx) {
+    throw new Error(
+      '`useFileExplorerDispatch` must be used within `FileExplorer`',
+    );
+  }
+  return ctx;
+}
+
+export function FileExplorer({
+  dispatch,
+  children,
+  ...props
+}: {
+  dispatch: React.Dispatch<Action>;
+} & WithoutStyle<Omit<React.ComponentProps<typeof Stack>, 'children'>>) {
+  return (
+    <FileExplorerDispatchContext value={dispatch}>
+      <Stack gap="regular" {...props}>
+        {children}
+      </Stack>
+    </FileExplorerDispatchContext>
+  );
+}
+
+FileExplorer.Toolbar = FileExplorerToolbar;
+FileExplorer.Row = FileExplorerRow;
+```
+
+Root **does not** `.map` files. It wraps `children` and provides `dispatch`.
+
+## 4. Item parent — item context + default children
+
+`ui/file-explorer-row.tsx`:
+
+```tsx
+import { createContext, useContext } from 'react';
+
+import { Group, type GroupProps } from '../../group/feature/group';
+import type { SpaceFile } from '../util/types';
+import { FileExplorerRowMeta } from './file-explorer-row-meta';
+import { FileExplorerRowName } from './file-explorer-row-name';
+
+export const FileExplorerRowContext = createContext<{
+  file: SpaceFile;
+} | null>(null);
+
+export function useFileExplorerRowContext() {
+  const ctx = useContext(FileExplorerRowContext);
+  if (!ctx) {
+    throw new Error(
+      '`FileExplorer.Row.*` must be rendered inside `FileExplorer.Row`',
+    );
+  }
+  return ctx;
+}
+
+export function FileExplorerRow({
+  file,
+  children = (
+    <>
+      <FileExplorerRow.Name />
+      <FileExplorerRow.Meta />
+    </>
+  ),
+  ...props
+}: {
+  file: SpaceFile;
+  children?: React.ReactNode;
+} & Omit<GroupProps, 'children'>) {
+  return (
+    <FileExplorerRowContext.Provider value={{ file }}>
+      <Group gap="regular" align="center" wrap="nowrap" {...props}>
+        {children}
+      </Group>
+    </FileExplorerRowContext.Provider>
+  );
+}
+
+FileExplorerRow.Name = FileExplorerRowName;
+FileExplorerRow.Meta = FileExplorerRowMeta;
+```
+
+Override the row by passing `children`. Omit a part by passing a custom tree (e.g. only `<FileExplorer.Row.Name />`).
+
+## 5. Chrome — default slot, reads nothing from the list
+
+`ui/file-explorer-toolbar.tsx`:
+
+```tsx
+import { Button } from '../../button/feature/button';
+import { Group, type GroupProps } from '../../group/feature/group';
+import { FileExplorerToolbarTitle } from './file-explorer-toolbar-title';
+
+export function FileExplorerToolbar({
+  children = (
+    <>
+      <FileExplorerToolbar.Title />
+      <Button variant="subtle">Download</Button>
+    </>
+  ),
+  ...props
+}: { children?: React.ReactNode } & Omit<GroupProps, 'children'>) {
+  return (
+    <Group justify="space-between" align="center" {...props}>
+      {children}
+    </Group>
+  );
+}
+
+FileExplorerToolbar.Title = FileExplorerToolbarTitle;
+```
+
+`ui/file-explorer-toolbar-title.tsx`:
+
+```tsx
+import { Text } from '../../text/feature/text';
+
+export function FileExplorerToolbarTitle() {
+  const { title } = useFileExplorerToolbarContext();
+  return <Text variant="title">{title}</Text>;
+}
+```
+
+## 6. Leaf — ambient data + action creator
+
+`ui/file-explorer-row-name.tsx`:
+
+```tsx
+import { Input, type InputProps } from '@repo/react/design-system';
+import { renameFile } from '../util/rename-file';
+import { useFileExplorerDispatch } from '../feature/file-explorer';
+import { useFileExplorerRowContext } from './file-explorer-row';
+
+export function FileExplorerRowName(
+  props: Omit<InputProps, 'defaultValue' | 'onBlur'>,
+) {
+  const dispatch = useFileExplorerDispatch();
+  const { file } = useFileExplorerRowContext();
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    dispatch(renameFile({ fileId: file.id, name: event.target.value }));
+  };
+
+  return <Input defaultValue={file.name} onBlur={handleBlur} {...props} />;
+}
+```
+
+The leaf does not take `file`, `onRename`, or `className`. It takes behavior/a11y props only. Layout comes from the parent `Group`.
+
+## 7. Action creator — `util/rename-file.ts`
+
+```ts
+import type { Action, ActionPayload } from './types';
+
+export function renameFile(payload: ActionPayload<'rename'>): Action {
+  return { type: 'rename', payload } as const;
+}
+```
+
+Domain reducer handles `'rename'` and calls other `util/` transforms (`react-feature-hooks.mdc`).
+
+## 8. Compose edge — the only `.map`
+
+`spaces/feature/space-manage.tsx`:
+
+```tsx
+import { FileExplorer, Stack } from '@repo/react/design-system';
+
+import { useSpaceFiles } from '../hooks/use-space-files';
+
+export function SpaceManage({ spaceId }: SpaceManageProps) {
+  const { files, dispatch } = useSpaceFiles({ spaceId });
+
+  return (
+    <FileExplorer dispatch={dispatch}>
+      <FileExplorer.Toolbar />
+      <Stack gap="tight">
+        {files.map((file) => (
+          <FileExplorer.Row key={file.id} file={file} />
+        ))}
+      </Stack>
+    </FileExplorer>
+  );
+}
+```
+
+Default row internals render (`Name` + `Meta`). Custom row:
+
+```tsx
+<FileExplorer.Row key={file.id} file={file}>
+  <FileExplorer.Row.Name />
+</FileExplorer.Row>
+```
+
+Custom toolbar:
+
+```tsx
+<FileExplorer.Toolbar>
+  <FileExplorer.Toolbar.Title />
+  <Button variant="subtle">Share</Button>
+</FileExplorer.Toolbar>
+```
+
+## Assembly checklist
+
+1. Only `feature/` / `ui/` / `util/` / `hooks/` (plus `data-access/` / `constants/` / `icons/` when needed)
+2. Types + action creators in `util/`
+3. One file per UI node; kebab name encodes the path in the tree
+4. Root: dispatch context + `{children}` — no list `.map`
+5. Each repeating parent: item context + default `children` + statics
+6. Leaves: throwing accessors + `dispatch(actionCreator(payload))` + `WithoutStyle` behavior props
+7. Compose edge: hook → map collection → `<Root.Child key={id} … />`
+8. Attach statics on the parent that owns that child (`Root.Row = Row`, `Row.Name = Name`)

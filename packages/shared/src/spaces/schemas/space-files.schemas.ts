@@ -27,3 +27,17 @@ export const addSpaceFilesInputSchema = z.object({
 });
 
 export type AddSpaceFilesInput = z.infer<typeof addSpaceFilesInputSchema>;
+
+export const reorderSpaceFileEntrySchema = z.object({
+  fileId: z.uuid(),
+  sortOrder: z.number().int().min(0),
+});
+
+export type ReorderSpaceFileEntry = z.infer<typeof reorderSpaceFileEntrySchema>;
+
+export const reorderSpaceFilesInputSchema = z.object({
+  spaceId: z.uuid(),
+  files: z.array(reorderSpaceFileEntrySchema).max(SpaceConfig.MAX_FILES),
+});
+
+export type ReorderSpaceFilesInput = z.infer<typeof reorderSpaceFilesInputSchema>;

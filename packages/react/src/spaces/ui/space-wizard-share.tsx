@@ -1,21 +1,22 @@
 import { useMutation } from '@apollo/client/react';
-import {
-  ActionIcon,
-  Button,
-  Group,
-  PinInput,
-  SegmentedControl,
-  Stack,
-  Text,
-  Tooltip,
-} from '@mantine/core';
+import { Button, SegmentedControl, Tooltip } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { ArrowsClockwiseIcon } from '@phosphor-icons/react/ArrowsClockwise';
-import { SpaceConfig, createShareFormSchema, type CreateShareFormValues } from '@repo/shared';
-import type { CSSProperties } from 'react';
+import {
+  SpaceConfig,
+  createShareFormSchema,
+  pluralize,
+  type CreateShareFormValues,
+} from '@repo/shared';
 
 import { useAppForm, type UseAppFormReturn } from '../../common/hooks/use-app-form';
+import { Group } from '../../design-system/group/feature/group';
+import { IconButton } from '../../design-system/icon-button/feature/icon-button';
 import { Panel } from '../../design-system/panel/feature/panel';
+import { Pin } from '../../design-system/pin/feature/pin';
+import { Stack } from '../../design-system/stack/feature/stack';
+import { Text } from '../../design-system/text/feature/text';
+import { ICON_SIZE } from '../../design-system/util/icon-size';
 import { CreateShareDocument } from '../data-access/create-share.generated';
 import { SpaceDocument } from '../data-access/space.generated';
 import { getSharePin } from '../util/get-share-pin';
@@ -77,9 +78,9 @@ export function SpaceWizardShare({ spaceId, onShared }: SpaceWizardShareProps) {
 
   return (
     <form onSubmit={submit}>
-      <Stack gap="lg">
-        <Panel tone="surface" gap="lg">
-          <Text fw={600}>Protect &amp; share</Text>
+      <Stack gap="loose">
+        <Panel tone="surface" gap="loose">
+          <Text variant="title">Protect &amp; share</Text>
           <ExpiryField form={form} />
           <PinField form={form} />
         </Panel>
@@ -95,10 +96,11 @@ export function SpaceWizardShare({ spaceId, onShared }: SpaceWizardShareProps) {
 
 function ExpiryField({ form }: { form: ShareForm }) {
   return (
-    <Stack gap={4}>
-      <Text size="sm" fw={500}>
-        Link expires after
-      </Text>
+    <Stack gap="regular">
+      <Stack gap="tight">
+        <Text variant="label">Link expires after</Text>
+        <Text>After this, the link stops working and the files are removed</Text>
+      </Stack>
       <SegmentedControl
         value={String(form.values.expiryDays)}
         onChange={(next) =>
@@ -106,7 +108,7 @@ function ExpiryField({ form }: { form: ShareForm }) {
         }
         data={SpaceConfig.SHARE_EXPIRY_PRESETS_DAYS.map((days) => ({
           value: String(days),
-          label: `${days} day${days === 1 ? '' : 's'}`,
+          label: `${days} ${pluralize({ count: days, singular: 'day' })}`,
         }))}
       />
     </Stack>
@@ -117,56 +119,33 @@ function PinField({ form }: { form: ShareForm }) {
   const pinProps = form.getInputProps('pin');
 
   return (
-    <Stack gap={6}>
-      <Text size="sm" fw={500}>
-        PIN
-      </Text>
-      <Text size="xs" c="dimmed">
-        Recipients must enter this {SpaceConfig.SHARE_PIN_LENGTH}-digit PIN to open the space
-      </Text>
-      <Group
-        gap="xs"
-        wrap="nowrap"
-        align="center"
-        style={{ '--share-pin-control-size': '36px' } as CSSProperties}
-      >
-        <PinInput
+    <Stack gap="regular">
+      <Stack gap="tight">
+        <Text variant="label">PIN</Text>
+        <Text>
+          Recipients must enter this {SpaceConfig.SHARE_PIN_LENGTH}-digit PIN to open the space
+        </Text>
+      </Stack>
+      <Group gap="regular" wrap="nowrap" align="center">
+        <Pin
           length={SpaceConfig.SHARE_PIN_LENGTH}
-          type="number"
-          oneTimeCode
           value={String(pinProps.value ?? '')}
           onChange={pinProps.onChange}
           error={Boolean(pinProps.error)}
-          aria-label="Share PIN"
-          styles={{
-            pinInput: {
-              width: 'var(--share-pin-control-size)',
-              height: 'var(--share-pin-control-size)',
-              '--input-height': 'var(--share-pin-control-size)',
-              '--input-size': 'var(--share-pin-control-size)',
-            },
-          }}
+          ariaLabel="Share PIN"
         />
         <Tooltip label="Generate a random PIN">
-          <ActionIcon
+          <IconButton
             variant="default"
             aria-label="Generate PIN"
             onClick={() => form.setFieldValue('pin', getSharePin())}
-            style={{
-              width: 'var(--share-pin-control-size)',
-              height: 'var(--share-pin-control-size)',
-              minWidth: 'var(--share-pin-control-size)',
-              minHeight: 'var(--share-pin-control-size)',
-            }}
           >
-            <ArrowsClockwiseIcon size={16} />
-          </ActionIcon>
+            <ArrowsClockwiseIcon size={ICON_SIZE.lg} />
+          </IconButton>
         </Tooltip>
       </Group>
       {typeof pinProps.error === 'string' && pinProps.error.length > 0 && (
-        <Text size="xs" c="red">
-          {pinProps.error}
-        </Text>
+        <Text variant="error">{pinProps.error}</Text>
       )}
     </Stack>
   );

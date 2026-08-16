@@ -1,0 +1,62 @@
+---
+description: Facade — one entry that orchestrates a subsystem
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Facade
+
+One simple method over several collaborators. The client does not know the sequence or the internals.
+
+## Anatomy
+
+- Subsystem services / use-cases (each one concern).
+- Facade injects them and runs the workflow.
+- Resolvers/controllers call **only** the facade.
+
+In this repo, **`workflows/` are facades** over `use-cases/` and infra services:
+
+```ts
+@Injectable()
+export class CreateSpaceWorkflow {
+  constructor(private readonly createSpace: CreateSpaceUseCase) {}
+
+  async execute(
+    input?: CreateSpaceWorkflowInput,
+    db?: DrizzleClient,
+  ): Promise<CreateSpaceWorkflowResult> {
+    const authorKey = randomBytes(32).toString('hex');
+    const space = await this.createSpace.execute(
+      { authorKey, ownerUserId: input?.ownerUserId },
+      db,
+    );
+    return { space, authorKey };
+  }
+}
+```
+
+Richer example: `CompleteSpaceFileUploadWorkflow` coordinates find/claim/promote/thumbnails/events — the tus hook calls `execute`, not five use-cases.
+
+Export the workflow from the domain module. Do not export every use-case for `apps/api` to orchestrate.
+
+## Facade vs Mediator
+
+| Facade | Mediator |
+| --- | --- |
+| One-way: client → facade → subsystems | Colleagues talk **through** the mediator |
+| Subsystems unaware of each other *and* of the facade | Colleagues know the mediator |
+| `workflows/` | Use when peers must notify each other |
+
+## When to use
+
+- Multi-step flows (create share, complete upload).
+- Hide module internals; module public API is the facade.
+
+## When not to use
+
+- Pass-through of a single use-case — call the use-case.
+- God workflow that does unrelated jobs — split workflows.
+
+Related: `nest-mediator.mdc`, `nest-adapter.mdc`, `nest-command.mdc`.

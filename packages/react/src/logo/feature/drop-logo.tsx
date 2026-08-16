@@ -1,4 +1,4 @@
-import { Title, Tooltip, UnstyledButton } from '@mantine/core';
+import { Tooltip, UnstyledButton } from '@mantine/core';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 
@@ -6,24 +6,25 @@ import { useStorageCapacity } from '../hooks/use-storage-capacity';
 
 import classes from './drop-logo.module.css';
 
-export interface DropLogoProps {
+export type DropLogoProps = {
   /** Navigate home / fresh start. When omitted, the logo is inert. */
   onHome?: () => void;
-  order?: 1 | 2 | 3;
-}
+  /** Compact chrome beside a page title. Display is the landing wordmark. */
+  size?: 'display' | 'compact';
+};
 
 /** Brand wordmark — live storage fill when capacity is available; clickable when `onHome` is set. */
-export function DropLogo({ onHome, order = 1 }: DropLogoProps): ReactNode {
+export function DropLogo({ onHome, size = 'display' }: DropLogoProps): ReactNode {
   const { meter } = useStorageCapacity();
+  const Tag = size === 'compact' || onHome ? 'p' : 'h1';
 
   let content: ReactNode = (
-    <Title
-      order={order}
-      className={clsx(classes.wordmark, meter && classes.meter)}
+    <Tag
+      className={clsx(classes.wordmark, classes[size], meter && classes.meter)}
       style={meter?.style}
     >
       Drop
-    </Title>
+    </Tag>
   );
 
   if (onHome) {

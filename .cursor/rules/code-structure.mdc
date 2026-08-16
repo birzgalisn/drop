@@ -1,0 +1,103 @@
+---
+description: FE code-structure guidelines for all refactors
+alwaysApply: true
+---
+
+# Code structure
+
+Apply this discipline in the frontend (`apps/web`, `packages/react`, `packages/shared`).
+
+## Directory map
+
+| Role | Frontend |
+| --- | --- |
+| Compose: hooks → map data into UI | `apps/web` routes; domain `feature/` |
+| Orchestrate: state, actions, derive views | `packages/react/.../hooks/` |
+| Work: pure transforms | `.../util/`; isomorphic → `@repo/shared` |
+| Present: one visual concern per file | `.../ui/` (compound parents in feature/DS) |
+| Frozen literals / lookup tables | `.../constants/` or `.../util/` |
+| Small domain shapes + action creators | `.../util/`; isomorphic → `@repo/shared` |
+| Tiny SVG components | `.../icons/` |
+
+## Responsibilities
+
+1. **Compose** — call hooks and map the view model into components.
+2. **Orchestrate** — hold state, define actions, call `util`, derive view models (`as const`).
+3. **Work** — pure functions: input → output, no React.
+4. **Present** — props or ambient compound context → markup.
+
+## Data flow
+
+```
+user event
+  → leaf dispatches action (or calls hook handler)
+  → reducer/hook calls util
+  → new state
+  → hook derives view model in render
+  → compose edge maps view model into components
+```
+
+**Who iterates:** the compose edge (`feature/` / route) maps collections onto compound children. Compound parents provide layout, context, and default slots — they do not internally `.map` the domain list.
+
+**Who dispatches:** repeating leaves read ambient context and `dispatch(actionCreator(payload))`. The compose edge does not drill `onReorder` / `onRemove` through every row.
+
+## Canonical shape
+
+**Compose** — `feature/` / `apps/web` routes: call hooks, map the view model into nested UI.
+
+```tsx
+import { ItemList, Panel } from '@repo/react/design-system';
+
+import { useItems } from '../hooks/use-items';
+
+export function ItemsPanel({ collectionId }: ItemsPanelProps) {
+  const { items, dispatch } = useItems({ collectionId });
+
+  return (
+    <Panel>
+      <ItemList dispatch={dispatch}>
+        <ItemList.Toolbar />
+        {items.map((item) => (
+          <ItemList.Row key={item.id} item={item} />
+        ))}
+      </ItemList>
+    </Panel>
+  );
+}
+```
+
+**Orchestrate** — `hooks/`: discriminated `Action`, creators, reducer that calls `util`, derives the view model in render (`react-feature-hooks.mdc`).
+
+**Work** — `util/`: one concern each — merge, validate, path builders, array updates (`pure-domain.mdc`).
+
+**Present** — `ui/` leaves: read props or ambient data, render one control (`tiny-files.mdc`). Layout uses design-system primitives (`design-system-layout.mdc`).
+
+Named exports; options objects for 2+ params (`function-args.mdc`); domain folders under `packages/react/src/<domain>/` with `feature/` / `ui/` / `util/` / `hooks/` (no dangling files at the domain root).
+
+## Refactor checklist
+
+- [ ] File lives in `feature/` / `ui/` / `hooks/` / `util/` / `data-access/` / `constants/` / `icons/` — not at the domain root
+- [ ] Pure logic lives in `util/` / `@repo/shared`
+- [ ] Hook wires and derives; util does the work
+- [ ] UI leaf is one concern (`tiny-files.mdc`)
+- [ ] Variation uses slots / composition (`react-composition.mdc`)
+- [ ] Layout uses DS primitives; no public `className` / `style` (`design-system-layout.mdc`)
+- [ ] Collections are mapped at the compose edge; leaves dispatch via context
+- [ ] Named `handleX` / derived consts in the hook body; `return` only composes them — no `useCallback` / `useMemo` for stability (`react-feature-hooks.mdc`)
+
+## Sibling rules
+
+| Rule | Covers |
+| --- | --- |
+| `tiny-files.mdc` | Size budgets, filename hierarchy, co-located privates |
+| `pure-domain.mdc` | `util` catalog, composing pure helpers |
+| `react-feature-hooks.mdc` | Actions, reducers, effects, naming, compiler |
+| `react-handlers.mdc` | `onClick={handleClick}` vs inline |
+| `react-layers.mdc` | `feature` / `ui` / `hooks` / `util` / `data-access` |
+| `react-composition.mdc` | Compounds, slots, context, HTML props |
+| `react-hook-injection.mdc` | Inject hooks into reusable compounds via props |
+| `react-compound-e2e.mdc` | Full compound assembly from files to compose edge |
+| `design-system-layout.mdc` | DS primitives; Mantine only inside DS; `Button` / `Input` / `Pin` |
+| `imports-and-files.mdc` | Kebab-case, named exports, shallow imports |
+| `types-and-constants.mdc` | Types, constants, `as const` / `satisfies` |
+| `function-args.mdc` | Options-object args |

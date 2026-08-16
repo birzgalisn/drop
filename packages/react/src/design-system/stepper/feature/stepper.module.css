@@ -1,0 +1,16 @@
+.root {
+  margin-inline: auto;
+  width: 100%;
+}
+
+.narrow {
+  max-width: 20rem;
+}
+
+.regular {
+  max-width: 25rem;
+}
+
+.wide {
+  max-width: 40rem;
+}

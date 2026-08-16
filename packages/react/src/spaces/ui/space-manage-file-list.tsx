@@ -1,10 +1,14 @@
-import { getZipQuery } from '../../common/util/build-query-string';
-import { openDownload } from '../../common/util/open-download';
 import {
-  FileExplorer,
-  type FileExplorerItem,
-} from '../../design-system/file-explorer/feature/file-explorer';
+  FileTable,
+  type UseFileTable,
+  type UseImageView,
+} from '../../design-system/file-table/feature/file-table';
+import { Text } from '../../design-system/text/feature/text';
+import { useEditableFileTable } from '../hooks/use-editable-file-table';
+import { useSpaceImageView } from '../hooks/use-space-image-view';
 import type { MergedSpaceFileItem } from '../util/get-merged-space-files-with-uploads';
+import { openSpaceZip } from '../util/open-space-zip';
+import { spaceManageFileColumns } from '../util/space-manage-file-columns';
 
 export interface SpaceManageFileListProps {
   items: MergedSpaceFileItem[];
@@ -12,8 +16,6 @@ export interface SpaceManageFileListProps {
   apiBaseUrl: string;
   removing: boolean;
   onRemoveFiles: (fileIds: string[]) => void;
-  activeImageId?: string | null;
-  onActiveImageIdChange?: (fileId: string | null) => void;
 }
 
 export function SpaceManageFileList({
@@ -22,66 +24,36 @@ export function SpaceManageFileList({
   apiBaseUrl,
   removing,
   onRemoveFiles,
-  activeImageId,
-  onActiveImageIdChange,
 }: SpaceManageFileListProps) {
-  const fileUrl = (fileId: string) => `${apiBaseUrl}/spaces/${spaceId}/files/${fileId}`;
+  const useTable: UseFileTable<MergedSpaceFileItem> = ({ rows }) => useEditableFileTable({ rows });
 
-  const explorerFiles: FileExplorerItem[] = items.map((item) => {
-    const ready = item.serverStatus === 'READY' || item.upload?.status === 'success';
-    const thumbsReady = Boolean(item.thumbKey);
-    const thumbUrl = thumbsReady ? `${fileUrl(item.fileId)}?variant=thumb` : null;
-    const blobPreview = item.upload?.previewUrl ?? null;
-    // Thumbs can lag behind READY; fall back to the thumb endpoint anyway.
-    const readyFallback =
-      !thumbUrl && !blobPreview && ready ? `${fileUrl(item.fileId)}?variant=thumb` : null;
-
-    return {
-      id: item.fileId,
-      name: item.name,
-      byteSize: item.byteSize,
-      createdAt: item.createdAt ? String(item.createdAt) : null,
-      statusLabel: getStatusLabel(item),
-      thumbUrl: thumbUrl ?? blobPreview ?? readyFallback,
-      viewUrl: thumbsReady
-        ? `${fileUrl(item.fileId)}?variant=preview`
-        : ready
-          ? fileUrl(item.fileId)
-          : null,
-      selectable: ready,
-    };
-  });
+  const useImageView: UseImageView<MergedSpaceFileItem> = ({ rows }) =>
+    useSpaceImageView({
+      rows,
+      spaceId,
+      apiBaseUrl,
+    });
 
   return (
-    <FileExplorer
-      files={explorerFiles}
-      embedded
-      removing={removing}
-      onZip={(fileIds) => {
-        openDownload(`${apiBaseUrl}/spaces/${spaceId}/zip${getZipQuery(fileIds)}`);
-      }}
-      getDownloadHref={(file) => (file.selectable === false ? null : fileUrl(file.id))}
-      onRemoveMany={onRemoveFiles}
-      activeImageId={activeImageId}
-      onActiveImageIdChange={onActiveImageIdChange}
-    />
+    <FileTable
+      rows={items}
+      columns={spaceManageFileColumns}
+      useTable={useTable}
+      useImageView={useImageView}
+    >
+      {({ Toolbar, List, ImageView }) => (
+        <>
+          <Toolbar>
+            <Toolbar.Search placeholder="Search by name" />
+            <Toolbar.Actions>
+              <Toolbar.Zip onZip={(fileIds) => openSpaceZip({ apiBaseUrl, spaceId, fileIds })} />
+              <Toolbar.Delete loading={removing} onRemove={onRemoveFiles} />
+            </Toolbar.Actions>
+          </Toolbar>
+          <List empty={<Text>No files match that name.</Text>} />
+          <ImageView />
+        </>
+      )}
+    </FileTable>
   );
-}
-
-function getStatusLabel(item: MergedSpaceFileItem): string {
-  const upload = item.upload;
-
-  if (upload?.status === 'error') {
-    return 'Failed';
-  }
-
-  if (item.serverStatus === 'READY' || upload?.status === 'success') {
-    return 'Ready';
-  }
-
-  if (upload && upload.bytesTotal > 0) {
-    return `${Math.round((upload.bytesUploaded / upload.bytesTotal) * 100)}%`;
-  }
-
-  return item.serverStatus ?? 'Pending';
 }

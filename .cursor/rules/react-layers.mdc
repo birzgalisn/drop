@@ -1,0 +1,94 @@
+---
+description: feature / ui / hooks / util / data-access boundaries
+globs:
+  - packages/react/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# React layers
+
+Keep the same roles inside `packages/react/src/<domain>/` (and subdomains like `wizard-upload/`, `share-viewer/`).
+
+## Folder contract
+
+Every domain (and subdomain) is **only** these directories. No loose files beside them (`types.ts`, `actions.ts`, `constants.ts` at the folder root).
+
+| Dir | Holds | Imports |
+| --- | --- | --- |
+| `feature/` | Owns hooks; composes layout; passes props into `ui/` | `hooks/`, `ui/`, `util/`, `@repo/react/design-system` |
+| `ui/` | Presentational leaves — props in, elements out | other `ui/`, `util/` types, `@repo/react/design-system` |
+| `hooks/` | React state, wiring, subscriptions | `util/`, `data-access/` |
+| `util/` | Pure work, **types**, **action creators**, view-model helpers | `@repo/shared`, other util |
+| `data-access/` | GraphQL documents + generated types | — |
+| `constants/` | Frozen tables / defaults (when they are not a single util module) | `util/` types |
+| `icons/` | Tiny SVG components | — |
+
+`README.md` may sit at the domain root. Public re-exports live on the package `index` / export map, not as a stray `index.ts` inside the feature.
+
+```
+packages/react/src/design-system/file-explorer/
+  feature/
+  ui/
+  hooks/
+  util/
+```
+
+`apps/web` routes compose only: pass ids, callbacks, and public `@repo/react/...` features.
+
+## Compose edge
+
+```tsx
+import { ItemList, Panel } from '@repo/react/design-system';
+
+import { useItems } from '../hooks/use-items';
+
+export function ItemsPanel({ collectionId }: ItemsPanelProps) {
+  const { items, dispatch } = useItems({ collectionId });
+
+  return (
+    <Panel>
+      <ItemList dispatch={dispatch}>
+        <ItemList.Toolbar />
+        {items.map((item) => (
+          <ItemList.Row key={item.id} item={item} />
+        ))}
+      </ItemList>
+    </Panel>
+  );
+}
+```
+
+Hooks at the top → map the view model → nested UI. Domain work stays in `hooks/` + `util/` (`react-feature-hooks.mdc`, `pure-domain.mdc`).
+
+## Presentational leaf
+
+Content control comes from the design system (`Input`, `Pin`, `Button`, `Text`). Layout around it is `Stack` / `Group` / `Panel` (`design-system-layout.mdc`):
+
+```tsx
+import { Pin, Stack, Text } from '@repo/react/design-system';
+import { SpaceConfig } from '@repo/shared';
+
+export function PinBlock({ value, onChange, error }: PinBlockProps) {
+  return (
+    <Stack gap="tight">
+      <Text variant="label">PIN</Text>
+      <Pin
+        length={SpaceConfig.SHARE_PIN_LENGTH}
+        value={value}
+        onChange={onChange}
+        error={error}
+        mask
+        ariaLabel="Share PIN"
+      />
+    </Stack>
+  );
+}
+```
+
+## Keeping layers healthy
+
+- Data wiring and mutations live in `hooks/` / `feature/`; `ui/` stays presentational.
+- Merge / validate / update logic lives in `util/` once a `feature/` or hook would grow past a thin compose (`tiny-files.mdc`).
+- Shared helpers used by several subdomains live in the **parent** domain `util/` / `hooks/` (`imports-and-files.mdc`).
+- Layout and controls come from `@repo/react/design-system`. `@mantine/core` stays inside DS primitive files (`design-system-layout.mdc`).

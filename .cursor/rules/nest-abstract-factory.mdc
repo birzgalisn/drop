@@ -1,0 +1,66 @@
+---
+description: Abstract Factory — families of related objects that must stay compatible
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Abstract Factory
+
+Create **families** of related products (processor + refund handler from the same vendor) without mixing vendors.
+
+Factory Method creates **one** product kind. Abstract Factory creates **several** that must match.
+
+## Anatomy
+
+- Abstract factory: `createPaymentProcessor()`, `createRefundHandler()`.
+- Concrete factories (`StripeFactory`, `PaypalFactory`) as `@Injectable()`.
+- Abstract products + concrete products. Products are usually **plain classes**; the container owns the **factories**.
+
+```ts
+export interface PaymentFactory {
+  createPaymentProcessor(): PaymentProcessor;
+  createRefundHandler(): RefundHandler;
+}
+
+@Injectable()
+export class StripeFactory implements PaymentFactory {
+  createPaymentProcessor() {
+    return new StripePaymentProcessor();
+  }
+
+  createRefundHandler() {
+    return new StripeRefundHandler();
+  }
+}
+```
+
+Client talks only to `PaymentFactory`:
+
+```ts
+processPayment(gateway: string) {
+  const factory = this.factories[gateway];
+  return factory.createPaymentProcessor().processPayment(99.99);
+}
+```
+
+## Nest mapping
+
+- Register concrete factories as providers; inject them into a map.
+- Optional: `useFactory` to pick **one** family from env (`PAYMENT_VENDOR=stripe`) instead of a runtime map.
+- Put each vendor family in its own folder.
+
+Do not inject `StripePaymentProcessor` and `PaypalRefundHandler` separately into a workflow — that is how families get mixed.
+
+## When to use
+
+- Multiple vendors, each with several collaborating types.
+- Must not mix family members.
+
+## When not to use
+
+- One family, or products are unrelated — use Factory Method or Strategy.
+- Adding a new *product kind* to the family forces every factory to change; keep the family surface stable.
+
+Related: `nest-factory-method.mdc`, `nest-singleton.mdc`, `nest-builder.mdc`.

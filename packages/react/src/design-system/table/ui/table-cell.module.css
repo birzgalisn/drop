@@ -1,0 +1,6 @@
+.fit {
+  width: 1%;
+  min-width: 6.5rem;
+  white-space: nowrap;
+  --table-horizontal-spacing: calc(var(--table-inline) + var(--gap-loose));
+}

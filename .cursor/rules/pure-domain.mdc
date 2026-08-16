@@ -1,0 +1,93 @@
+---
+description: Pure domain work in util/ — catalog and composition
+globs:
+  - packages/react/**
+  - apps/web/**
+  - packages/shared/**
+alwaysApply: false
+---
+
+# Pure domain logic
+
+Isolate transforms in `packages/react/.../util/` (isomorphic pieces in `@repo/shared`).
+
+## What belongs in util
+
+| Kind | Example | Notes |
+| --- | --- | --- |
+| Types | `util/types.ts` | Domain shapes + `Action` union |
+| Action creator | `util/rename-file.ts` | Returns `{ type, payload } as const` |
+| Structural update | `update-array-at.ts` | Generic, tiny |
+| Domain mutation | `reconcile-sort-order.ts` | Pure list rewrite |
+| Build / seed | `initialize-files.ts` | No React |
+| Derive view model | `map-space-file-rows.ts` | Hook calls this in render |
+| Facade compose | `get-merged-space-files-with-uploads.ts` | Calls other utils only |
+| Read helper | `get-share-viewer-url.ts` | Pure projection for UI |
+| Event util | `call-all.ts` | Generic function combiner |
+
+## Compose pure helpers
+
+```ts
+export function initializeFiles({ spaceId }: { spaceId: string }): SpaceFile[] {
+  const seed = createFileSeed({ spaceId });
+  return mapSpaceFileRows({ files: seed });
+}
+```
+
+Thin facades compose smaller utils.
+
+## Small pure util
+
+Named export + options object (`function-args.mdc`):
+
+```ts
+export function updateArrayAt<T>(options: {
+  array: T[];
+  indexToReplace: number;
+  newItem: T;
+}): T[] {
+  const { array, indexToReplace, newItem } = options;
+  return [
+    ...array.slice(0, indexToReplace),
+    newItem,
+    ...array.slice(indexToReplace + 1),
+  ];
+}
+```
+
+## Orchestrator calls util
+
+Reducer:
+
+```ts
+case 'reorder': {
+  const { fileId, nextSortOrder } = action.payload;
+  return reconcileSortOrder({ files, fileId, nextSortOrder });
+}
+```
+
+Related pure helpers share a file when they form one cohesive API.
+
+## Pure projection for UI
+
+Leaves call a util for derived display fields:
+
+```ts
+export function getFileRowMeta({
+  file,
+  uploads,
+}: {
+  file: SpaceFile;
+  uploads: Upload[];
+}) {
+  const upload = uploads.find((item) => item.fileId === file.id);
+  const status = upload?.status ?? file.status;
+  return { status, isReady: status === 'ready' } as const;
+}
+```
+
+## Guidelines
+
+- `ui/` receives precomputed props or calls small util projections.
+- `util/` stays React-free (no component imports).
+- Prefer named exported functions; use `satisfies` / `as const` when shaping domain objects (`types-and-constants.mdc`).

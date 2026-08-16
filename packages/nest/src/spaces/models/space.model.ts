@@ -10,7 +10,7 @@ import {
 } from '@nestjs/graphql';
 
 import { SpaceStatus } from '../enums/space-status.enum';
-import { SpaceContext, type SpaceGraphqlContext } from '../util/space-context.util';
+import { SpaceContext, type SpaceGraphqlContext } from '../services/space-context.service';
 import { Share } from './share.model';
 import { SpaceFile } from './space-file.model';
 
@@ -48,10 +48,12 @@ export class Space {
 
 @Resolver(Space)
 export class SpaceResolver {
+  constructor(private readonly spaceContext: SpaceContext) {}
+
   @ResolveField(() => Boolean, {
     description: 'True when the caller holds the author cookie for this space.',
   })
   isAuthor(@Parent() space: Space, @Context() ctx: SpaceGraphqlContext): boolean {
-    return SpaceContext.readAuthorKey(ctx) === space.authorKey;
+    return this.spaceContext.readAuthorKey(ctx) === space.authorKey;
   }
 }

@@ -1,8 +1,13 @@
-import { ActionIcon, Badge, Box, Progress, Stack, Text } from '@mantine/core';
+import { Badge, Progress } from '@mantine/core';
 import { TrashIcon } from '@phosphor-icons/react/Trash';
 import { Bytes } from '@repo/shared';
 
+import { Box } from '../../../design-system/box/feature/box';
+import { IconButton } from '../../../design-system/icon-button/feature/icon-button';
 import { ProgressiveImage } from '../../../design-system/media/feature/progressive-image';
+import { Stack } from '../../../design-system/stack/feature/stack';
+import { Text } from '../../../design-system/text/feature/text';
+import { ICON_SIZE } from '../../../design-system/util/icon-size';
 import type { MergedSpaceFileItem } from '../../util/get-merged-space-files-with-uploads';
 import { useUploadCardPreviewSrc } from '../hooks/use-upload-card-preview-src';
 
@@ -28,7 +33,7 @@ export function UploadCard({
   removing,
   onRemove,
 }: UploadCardProps) {
-  const { lowSrc, highSrc, onLowError } = useUploadCardPreviewSrc({
+  const { src, preview, onPreviewError } = useUploadCardPreviewSrc({
     item,
     isReady,
     spaceId,
@@ -36,52 +41,45 @@ export function UploadCard({
   });
 
   return (
-    <div className="drop-upload-card">
-      <Stack gap={6}>
-        <Box pos="relative">
-          <Box pos="relative" h={140} style={{ borderRadius: 8, overflow: 'hidden' }}>
-            <ProgressiveImage
-              lowSrc={lowSrc}
-              highSrc={highSrc}
-              alt={item.name}
-              height={140}
-              borderRadius={8}
-              onLowError={onLowError}
-            />
-          </Box>
+    <Stack gap="regular">
+      <Box pos="relative">
+        <Box pos="relative" h={140}>
+          <ProgressiveImage
+            src={src}
+            preview={preview}
+            alt={item.name}
+            onPreviewError={onPreviewError}
+          />
+        </Box>
 
-          <ActionIcon
-            pos="absolute"
-            top={6}
-            right={6}
-            size="sm"
-            color="red"
-            variant="filled"
-            radius="xl"
+        <Box pos="absolute" top={6} right={6}>
+          <IconButton
+            variant="solid"
+            tone="danger"
             loading={removing}
             onClick={() => onRemove(item.fileId)}
             aria-label={`Remove ${item.name}`}
           >
-            <TrashIcon size={14} />
-          </ActionIcon>
-
-          <Box pos="absolute" bottom={6} left={6}>
-            <UploadCardStatus percent={percent} isReady={isReady} isError={isError} />
-          </Box>
+            <TrashIcon size={ICON_SIZE.md} />
+          </IconButton>
         </Box>
 
-        {!isReady && !isError && percent !== undefined ? (
-          <Progress value={percent} size="xs" color="sand" />
-        ) : null}
+        <Box pos="absolute" bottom={6} left={6}>
+          <UploadCardStatus percent={percent} isReady={isReady} isError={isError} />
+        </Box>
+      </Box>
 
-        <Text size="xs" truncate="end">
+      {!isReady && !isError && percent !== undefined ? (
+        <Progress value={percent} size="xs" color="sand" />
+      ) : null}
+
+      <Stack gap="tight">
+        <Text variant="label" truncate>
           {item.name}
         </Text>
-        <Text size="xs" c="dimmed">
-          {Bytes.format(item.byteSize)}
-        </Text>
+        <Text>{Bytes.format(item.byteSize)}</Text>
       </Stack>
-    </div>
+    </Stack>
   );
 }
 

@@ -1,0 +1,72 @@
+---
+description: Builder — stepwise construction of a complex object
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Builder
+
+Build a complex object step by step. Same steps, different representations (express vs gift order).
+
+## Anatomy
+
+- Product (plain class / frozen object).
+- Builder: fluent methods returning `this`, plus `build()`.
+- Optional Director: named recipes (`createExpressOrder`).
+- Client: workflow / use-case that drives the builder.
+
+```ts
+export class OrderBuilder {
+  private order = new Order();
+
+  addItem(name: string, price: number, quantity: number): this {
+    this.order.items.push({ name, price, quantity });
+    return this;
+  }
+
+  setShipping(method: string, address: string): this {
+    this.order.shipping = { method, address };
+    return this;
+  }
+
+  build(): Order {
+    this.order.calculateTotal();
+    const result = this.order;
+    this.order = new Order();
+    return result;
+  }
+}
+```
+
+Reset in `build()` if the builder is a **singleton** provider. Prefer `new OrderBuilder()` per call (as in the site’s Nest example) so requests cannot leak state.
+
+Director stays pure (static / functions), not injectable, unless it needs services:
+
+```ts
+export class OrderDirector {
+  static createExpressOrder(builder: OrderBuilder, items: DirectorItem[]): Order {
+    for (const item of items) builder.addItem(item.name, item.price, item.quantity);
+    return builder.setShipping('express', 'Default').build();
+  }
+}
+```
+
+## Nest mapping
+
+- Simple inputs: a typed input DTO / options object (`function-args.mdc`) — **not** a builder.
+- Builder when construction has many optional parts and readable chaining matters.
+- `ConfigModule` `registerAs` / `asProvider()` is configuration, not this pattern.
+
+## When to use
+
+- Many optional parts; telescoping constructors hurt.
+- Reusable construction recipes (Director).
+
+## When not to use
+
+- Few fields, or you want a single immutable literal / `satisfies` object.
+- One representation with no recipes.
+
+Related: `nest-abstract-factory.mdc`, `nest-prototype.mdc`, `nest-composite.mdc`.

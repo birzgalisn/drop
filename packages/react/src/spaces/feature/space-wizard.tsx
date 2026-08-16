@@ -1,7 +1,9 @@
-import { Container, Stack, Text } from '@mantine/core';
 import type { ReactNode } from 'react';
 
-import { FloatyBackground } from '../../design-system/floaty-background/feature/floaty-background';
+import { Background } from '../../design-system/background/feature/background';
+import { Container } from '../../design-system/container/feature/container';
+import { Stack } from '../../design-system/stack/feature/stack';
+import { Text } from '../../design-system/text/feature/text';
 import { DropLogo } from '../../logo/feature/drop-logo';
 import { useSpaceFiles } from '../hooks/use-space-files';
 import { useAuthorSpaceLiveUpdates } from '../hooks/use-space-live-updates';
@@ -59,14 +61,14 @@ export function SpaceWizard({
 
   return (
     <>
-      <FloatyBackground />
-      <Container size="sm" py={64} pos="relative" style={{ zIndex: 1 }}>
-        <Stack gap="xl">
-          <Stack gap={6} align="center">
+      <Background />
+      <Container size="sm" py={64}>
+        <Stack gap="loose">
+          <Stack gap="tight" align="center" ta="center">
             <DropLogo onHome={onHome} />
-            <Text c="dimmed" ta="center" maw={360}>
-              Share images with a private, PIN-protected link.
-            </Text>
+            <Stack maw={360} ta="center">
+              <Text>Share images with a private, PIN-protected link.</Text>
+            </Stack>
           </Stack>
 
           <SpaceWizardStepper

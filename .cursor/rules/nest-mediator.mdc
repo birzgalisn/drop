@@ -1,0 +1,60 @@
+---
+description: Mediator — colleagues communicate only through a coordinator
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Mediator
+
+Encapsulate how a set of objects interact. Colleagues know the mediator, not each other.
+
+## Anatomy
+
+- `notify(sender, event, data)`.
+- Concrete mediator sequences work and rollback.
+- Colleagues call `this.mediator.notify(...)` after their step.
+
+```ts
+export interface Mediator {
+  notify(sender: string, event: string, data?: unknown): unknown;
+}
+
+export abstract class Colleague {
+  protected mediator!: Mediator;
+
+  setMediator(mediator: Mediator) {
+    this.mediator = mediator;
+  }
+}
+```
+
+Wire after DI: inject colleagues into the mediator, then `colleague.setMediator(this)`.
+
+Mediator may implement compensation (release inventory if payment fails).
+
+## Nest mapping
+
+| Facade (`workflows/`) | Mediator |
+| --- | --- |
+| Workflow calls A then B then C | A/B/C call back into the mediator |
+| Subsystems stay ignorant of the flow | Colleagues are flow-aware via events |
+
+Prefer **Facade workflows** in this repo (`CreateShareWorkflow`, `CompleteSpaceFileUploadWorkflow`). They already sequence use-cases without a notify protocol.
+
+Use Mediator when several services must **broadcast to each other** without a web of imports. If they only need “something happened”, prefer Observer (`SpaceEventsService` / pubsub) so publishers stay unaware of subscribers.
+
+Do not store per-request logs on a singleton mediator field (`currentLog`) without request scope — that races.
+
+## When to use
+
+- Dense many-to-many collaboration + shared rollback.
+- Adding a colleague should not patch every other colleague.
+
+## When not to use
+
+- Linear orchestration — a workflow is enough.
+- Mediator becomes a god object — split or use events.
+
+Related: `nest-facade.mdc`, `nest-observer.mdc`, `nest-command.mdc`.

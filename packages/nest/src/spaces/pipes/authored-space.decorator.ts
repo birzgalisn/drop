@@ -1,10 +1,9 @@
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 import { type GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
-import { AppError, SpaceConfig } from '@repo/shared';
+import { AppError, readCookie, SpaceConfig } from '@repo/shared';
 import type { FastifyRequest } from 'fastify';
-import '@fastify/cookie';
 
-import type { SpaceGraphqlContext } from '../util/space-context.util';
+import type { SpaceGraphqlContext } from '../services/space-context.service';
 
 /** Value passed into {@link import('./space-author.pipe').SpaceAuthorPipe}. */
 export interface SpaceAuthorPipeInput {
@@ -39,7 +38,7 @@ export const AuthoredSpace = createParamDecorator(
 
       return {
         spaceId,
-        authorKey: ctx.req?.cookies?.[SpaceConfig.AUTHOR_COOKIE],
+        authorKey: readCookie({ source: ctx, name: SpaceConfig.AUTHOR_COOKIE }),
       };
     }
 
@@ -54,7 +53,7 @@ export const AuthoredSpace = createParamDecorator(
 
     return {
       spaceId,
-      authorKey: request.cookies?.[SpaceConfig.AUTHOR_COOKIE],
+      authorKey: readCookie({ source: request, name: SpaceConfig.AUTHOR_COOKIE }),
     };
   },
 );

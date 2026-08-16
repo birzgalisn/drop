@@ -1,4 +1,5 @@
 import { notifications, notificationsStore } from '@mantine/notifications';
+import { pluralize } from '@repo/shared';
 
 import type { SpaceUploadItem, SpaceUploadStatus } from '../../util/upload-space-files-tus';
 import { UPLOAD_NOTIFICATION_ID } from '../constants';
@@ -51,10 +52,18 @@ export function completeNotificationTitle(uploads: SpaceUploadItem[]): string {
   const failed = uploads.some((upload) => upload.status === 'error');
 
   if (failed) {
-    return uploads.length === 1 ? 'Upload finished' : 'Uploads finished';
+    return pluralize({
+      count: uploads.length,
+      singular: 'Upload finished',
+      plural: 'Uploads finished',
+    });
   }
 
-  return uploads.length === 1 ? 'Upload complete' : 'All uploads complete';
+  return pluralize({
+    count: uploads.length,
+    singular: 'Upload complete',
+    plural: 'All uploads complete',
+  });
 }
 
 export function activeUploadTitle(options: {
@@ -69,8 +78,12 @@ export function activeUploadTitle(options: {
   }
 
   if (isPaused) {
-    return count === 1 ? 'Upload paused' : `${count} uploads paused`;
+    return pluralize({
+      count,
+      singular: 'Upload paused',
+      plural: `${count} uploads paused`,
+    });
   }
 
-  return count === 1 ? 'Uploading 1 file' : `Uploading ${count} files`;
+  return `Uploading ${count} ${pluralize({ count, singular: 'file' })}`;
 }

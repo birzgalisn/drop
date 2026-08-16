@@ -1,0 +1,7 @@
+.surface {
+  background: var(--surface);
+}
+
+.elevated {
+  background: var(--elevated);
+}

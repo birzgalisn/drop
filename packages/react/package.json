@@ -25,6 +25,7 @@
     "@mantine/notifications": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@repo/shared": "workspace:*",
+    "@tanstack/react-table": "catalog:",
     "clsx": "catalog:",
     "graphql": "catalog:",
     "react": "catalog:",

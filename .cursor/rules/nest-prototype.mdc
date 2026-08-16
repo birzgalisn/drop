@@ -1,0 +1,77 @@
+---
+description: Prototype — clone a template instead of constructing from scratch
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Prototype
+
+Create by **cloning** a prototype. Customize the copy; leave the original alone.
+
+## Anatomy
+
+- `clone()` on the prototype (deep-copy nested data).
+- Optional registry (singleton Map of named templates).
+- Client: get template → clone → mutate clone.
+
+```ts
+export interface Prototype<T> {
+  clone(): T;
+}
+
+export class ProductTemplate implements Prototype<ProductTemplate> {
+  constructor(
+    public name: string,
+    public price: number,
+    public attributes: Record<string, unknown>,
+  ) {}
+
+  clone(): ProductTemplate {
+    return new ProductTemplate(
+      this.name,
+      this.price,
+      structuredClone(this.attributes),
+    );
+  }
+}
+```
+
+Registry as a singleton provider:
+
+```ts
+@Injectable()
+export class TemplateRegistryService {
+  private readonly templates = new Map<string, ProductTemplate>();
+
+  getTemplate(id: string) {
+    return this.templates.get(id);
+  }
+
+  createFrom(id: string) {
+    return this.getTemplate(id)?.clone();
+  }
+}
+```
+
+Use `structuredClone()` (or an explicit field copy). Do not share nested object references between prototype and clone.
+
+## Nest mapping
+
+The registry is a provider. Templates and clones are **plain objects**, not providers.
+
+This is rare in `packages/nest` today: spaces/files are persisted rows, not in-memory templates. Reach for Prototype when seeding many similar in-memory configs or when copy-then-tweak is cheaper than rebuild.
+
+## When to use
+
+- Many variants share most fields.
+- Construction is expensive; clone is cheap.
+- Templates can be added at runtime.
+
+## When not to use
+
+- Circular graphs / non-cloneable handles (sockets, class instances with identity).
+- Each object is unique; a constructor or insert use-case is clearer.
+
+Related: `nest-factory-method.mdc`, `nest-singleton.mdc`, `nest-memento.mdc`.

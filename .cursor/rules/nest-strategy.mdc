@@ -1,0 +1,79 @@
+---
+description: Strategy — interchangeable algorithms selected at runtime
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Strategy
+
+Family of algorithms, same interface, pick one at runtime. Open/closed: add a class, not another `if`.
+
+## Anatomy
+
+- Strategy interface.
+- Concrete strategies as `@Injectable()`.
+- Context holds a map / default token and delegates.
+
+```ts
+export interface PricingStrategy {
+  readonly name: string;
+  calculate(basePrice: number, quantity: number): PricingResult;
+}
+
+export const PRICING_STRATEGY = Symbol('PRICING_STRATEGY');
+
+@Injectable()
+export class PricingService {
+  constructor(
+    @Inject(PRICING_STRATEGY) private readonly defaultStrategy: PricingStrategy,
+    @Inject(ALL_PRICING_STRATEGIES) strategies: PricingStrategy[],
+  ) {
+    this.strategies = new Map(strategies.map((s) => [s.name, s]));
+  }
+
+  calculatePrice(basePrice: number, quantity: number, name?: string) {
+    const strategy = name ? this.strategies.get(name) : this.defaultStrategy;
+    if (!strategy) throw AppError.badRequest(`Unknown strategy: ${name}`);
+    return strategy.calculate(basePrice, quantity);
+  }
+}
+```
+
+Module: `useExisting` for the default token; `useFactory` to gather `ALL_*`.
+
+## Nest mapping
+
+`TusHandlerRegistry` is Strategy-shaped: `UploadType` → `TusUploadHandler`. Feature modules `register` at startup; the `/files` endpoint does not `switch` on upload type.
+
+```ts
+@Injectable()
+export class TusHandlerRegistry {
+  private readonly handlers = new Map<UploadType, TusUploadHandler>();
+
+  register(uploadType: UploadType, handler: TusUploadHandler) {
+    this.handlers.set(uploadType, handler);
+  }
+
+  get(uploadType: UploadType) {
+    return this.handlers.get(uploadType);
+  }
+}
+```
+
+Injection tokens live in `tokens/` (`TUS_OPTIONS`).
+
+State vs Strategy: State transitions itself; Strategy is chosen by the caller and does not morph into another strategy as a lifecycle.
+
+## When to use
+
+- Several algorithms (pricing, hashing, upload handlers).
+- Eliminate `switch` on type for behavior.
+
+## When not to use
+
+- One algorithm.
+- Strategies need huge shared mutable context — keep it a workflow.
+
+Related: `nest-state.mdc`, `nest-factory-method.mdc`, `nest-template-method.mdc`.

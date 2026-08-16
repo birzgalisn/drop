@@ -31,7 +31,7 @@ Rules:
 - Tooling, Nest, and React are each a **single** package with folder modules + export subpaths.
 - React features use `data-access/` / `feature/` / `ui/` / `util/`.
 - Apps stay thin shells that compose `@repo/nest` / `@repo/react`.
-- Agent navigation: see [`.cursor/rules/`](.cursor/rules/) and domain READMEs under `packages/nest/src/spaces/`, `packages/nest/src/tus/`, `packages/react/src/spaces/`.
+- Agent navigation: see [`.cursor/rules/`](.cursor/rules/) (`code-structure`, `design-system-layout`, `react-layers`, `react-composition`, `tiny-files`, …) and domain READMEs under `packages/nest/src/spaces/`, `packages/nest/src/tus/`, `packages/react/src/spaces/`.
 
 ## Local
 

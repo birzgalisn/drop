@@ -1,0 +1,84 @@
+---
+description: Inject hooks into reusable compounds via props, with a default
+globs:
+  - packages/react/**
+  - apps/web/**
+alwaysApply: false
+---
+
+# Hook injection
+
+Inject a hook into a reusable compound. Keep one compound; swap the hook when behavior differs.
+
+`Table` below is one example (`T` is the row). Use the same idea on other compounds. The injected hook returns **table options** (filters, visibility). Domain callbacks stay at the compose edge as props on the slots that use them.
+
+```tsx
+// table/util/types.ts
+export type UseTable<T> = (options: { rows: T[] }) => TableOptionsFor<T>;
+
+// table/feature/table.tsx
+export function Table<T extends { id: string }>({
+  rows,
+  useTable = useDefaultTable,
+  children,
+}: {
+  rows: T[];
+  useTable?: UseTable<T>;
+  children: React.ReactNode;
+}) {
+  const options = useTable({ rows });
+  const table = useTableEngine({ rows, columns, options });
+  return <Table table={table}>{children}</Table>;
+}
+
+Table.Toolbar = TableToolbar;
+Table.Toolbar.Zip = TableToolbarZip;
+Table.Toolbar.Delete = TableToolbarDelete;
+Table.Row = TableRow;
+
+// table/hooks/use-default-table.ts
+export function useDefaultTable<T extends { id: string }>({
+  rows,
+}: {
+  rows: T[];
+}): TableOptionsFor<T> {
+  return {};
+}
+
+// <domain>/hooks/use-editable-table.ts — table options only; not a callback bus
+export function useEditableTable<T extends { id: string }>({
+  rows,
+}: {
+  rows: T[];
+}): TableOptionsFor<T> {
+  return {
+    ...useDefaultTable({ rows }),
+    enableGlobalFilter: true,
+  };
+}
+```
+
+```tsx
+// <domain>/feature/files-panel.tsx
+<Table rows={files}>
+  <Table.Toolbar />
+  {files.map((file) => (
+    <Table.Row key={file.id} row={file} />
+  ))}
+</Table>
+
+// <domain>/feature/editable-files.tsx
+<Dropzone onAddFiles={addFiles} hasFiles={files.length > 0}>
+  <Table rows={files} useTable={useEditableTable}>
+    <Table.Toolbar>
+      <Table.Toolbar.Zip onZip={zip} />
+      <Table.Toolbar.Delete loading={removing} onRemove={removeFiles} />
+    </Table.Toolbar>
+    {files.map((file) => (
+      <Table.Row key={file.id} row={file} />
+    ))}
+  </Table>
+</Dropzone>
+```
+
+Call the injected hook unconditionally. Table context is the v9 instance from `createTableHook` (`useTableContext` inside `<table.AppTable>`). Domain actions stay off the table; the compose edge passes `onZip` / `onRemove` to the toolbar slots that need them. Dropzone wraps at the compose edge; it is not a second table. The compose edge maps rows; `Table` does not.

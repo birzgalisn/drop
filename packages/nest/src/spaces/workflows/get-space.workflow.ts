@@ -1,13 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { AppError } from '@repo/shared';
 
-import { DrizzleService, SpaceStatus } from '../../drizzle';
+import { SpaceStatus } from '../../drizzle';
 import type { Space } from '../models/space.model';
-import {
-  FindShareBySpaceIdUseCase,
-  FindSpaceByIdUseCase,
-  ListSpaceFilesUseCase,
-} from '../use-cases';
+import { FindSpaceByIdUseCase, LoadAuthoredSpaceUseCase } from '../use-cases';
 
 export interface GetSpaceWorkflowInput {
   spaceId: string;
@@ -22,10 +18,8 @@ export interface GetSpaceWorkflowInput {
 @Injectable()
 export class GetSpaceWorkflow {
   constructor(
-    private readonly drizzle: DrizzleService,
     private readonly findSpaceById: FindSpaceByIdUseCase,
-    private readonly listSpaceFiles: ListSpaceFilesUseCase,
-    private readonly findShareBySpaceId: FindShareBySpaceIdUseCase,
+    private readonly loadAuthoredSpace: LoadAuthoredSpaceUseCase,
   ) {}
 
   async execute(input: GetSpaceWorkflowInput): Promise<Space | null> {
@@ -45,13 +39,6 @@ export class GetSpaceWorkflow {
       return space;
     }
 
-    const [files, share] = await this.drizzle.db.transaction(async (tx) =>
-      Promise.all([
-        this.listSpaceFiles.execute({ spaceId: space.id }, tx),
-        this.findShareBySpaceId.execute(space.id, tx),
-      ]),
-    );
-
-    return Object.assign(space, { files, share: share ?? null });
+    return this.loadAuthoredSpace.execute({ space });
   }
 }

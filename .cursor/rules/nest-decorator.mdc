@@ -1,0 +1,66 @@
+---
+description: Decorator — wrap an object to add behavior; vs Nest @Decorators
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Decorator
+
+Add behavior by wrapping an object that keeps the **same interface**. Stack wrappers in any order.
+
+This is **not** the same as TypeScript/Nest `@Injectable()`, `@UseGuards()`, method decorators. Those are language/framework metadata. GoF Decorator is object wrapping.
+
+## Anatomy
+
+- Component interface (`OrderProcessor.process`).
+- Concrete component (core work).
+- Decorators that take `wrapped: OrderProcessor` and call through.
+
+```ts
+export class ValidationDecorator implements OrderProcessor {
+  constructor(private readonly wrapped: OrderProcessor) {}
+
+  process(order: OrderData): ProcessedOrder {
+    if (order.items.length === 0) {
+      throw AppError.badRequest('Order must contain at least one item');
+    }
+    const result = this.wrapped.process(order);
+    result.steps.push('validated');
+    return result;
+  }
+}
+
+let processor: OrderProcessor = new BaseOrderProcessor();
+processor = new ValidationDecorator(processor);
+processor = new LoggingDecorator(processor);
+return processor.process(order);
+```
+
+## Nest mapping
+
+Prefer framework tools when they already wrap the request:
+
+| Need | Prefer |
+| --- | --- |
+| Validate input | pipes (`ZodValidationPipe`) |
+| Auth / session | guards / pipes (`ShareSessionPipe`) |
+| Map errors | exception filters |
+| Cross-cutting log/timing | interceptors or a TS method decorator |
+
+Use GoF Decorator when composing **domain** processors at runtime (optional discount + logging + validation on an order engine), not for HTTP.
+
+`GraphqlExceptionFilter` extending `BaseExceptionFilter` is inheritance + Adapter, not Decorator.
+
+## When to use
+
+- Independent behaviors combined per request.
+- Subclassing every combination would explode.
+
+## When not to use
+
+- One fixed pipeline — a workflow or Chain of Responsibility is clearer.
+- Unstable component interface (every wrapper churns).
+
+Related: `nest-composite.mdc`, `nest-proxy.mdc`, `nest-chain-of-responsibility.mdc`.

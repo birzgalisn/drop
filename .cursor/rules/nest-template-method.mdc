@@ -1,0 +1,57 @@
+---
+description: Template Method — fixed algorithm skeleton, overridable steps
+globs:
+  - packages/nest/**
+  - apps/api/**
+alwaysApply: false
+---
+
+# Template Method
+
+Fix the **order** of steps in a base method. Subclasses fill in some steps.
+
+Strategy swaps the **whole** algorithm. Template Method keeps the skeleton.
+
+## Anatomy
+
+```ts
+export abstract class ReportGenerator {
+  generate(): ReportData {
+    const raw = this.gatherData();
+    const processed = this.processData(raw);
+    return this.formatReport(processed);
+  }
+
+  protected abstract gatherData(): Record<string, unknown>[];
+
+  protected processData(data: Record<string, unknown>[]) {
+    return { records: data, totalRecords: data.length };
+  }
+
+  protected abstract formatReport(processed: Record<string, unknown>): ReportData;
+}
+```
+
+Concrete generators are `@Injectable()`. The abstract base is **not** a provider.
+
+A service maps `type → generator` and calls `generate()`.
+
+## Nest mapping
+
+- `UseCase.execute` is a **convention** (one verb), not a Template Method, unless a base class defines shared steps.
+- Workflows (`CompleteSpaceFileUploadWorkflow.execute`) are sequential facades. Extract a Template Method only when **several workflows share the same steps** with small differences.
+- Factory Method’s `getProduct()` wrapping `createProduct()` is Template Method.
+
+Prefer composition (inject a Strategy for the varying step) if inheritance gets awkward.
+
+## When to use
+
+- Same pipeline, a few steps differ.
+- You must forbid reordering those steps.
+
+## When not to use
+
+- Each variant is a different algorithm — Strategy.
+- Subclasses override almost every step — the skeleton is fiction.
+
+Related: `nest-strategy.mdc`, `nest-factory-method.mdc`, `nest-facade.mdc`.

@@ -3,15 +3,15 @@ import { MantineProvider, type MantineProviderProps } from '@mantine/core';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
-import { dropTheme } from '../util/drop-theme';
+import { uiTheme } from '../util/theme';
 
-import './drop-theme.css';
+import './theme.css';
 
-export type UiProviderProps = MantineProviderProps;
+export type UiProviderProps = Pick<MantineProviderProps, 'children'>;
 
-export function UiProvider({ children, theme = dropTheme, ...props }: UiProviderProps) {
+export function UiProvider({ children }: UiProviderProps) {
   return (
-    <MantineProvider defaultColorScheme="dark" forceColorScheme="dark" theme={theme} {...props}>
+    <MantineProvider defaultColorScheme="dark" forceColorScheme="dark" theme={uiTheme}>
       {children}
     </MantineProvider>
   );
