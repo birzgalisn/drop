@@ -4,9 +4,19 @@ Wizard, author manage, and recipient viewer for Drop spaces.
 
 Each surface is a feature component that takes props: the route passes ids, `apiBaseUrl`, and navigation callbacks, and the component owns its own layout. Structure rules: [`.cursor/rules/code-structure.mdc`](../../../../.cursor/rules/code-structure.mdc), [`.cursor/rules/react-layers.mdc`](../../../../.cursor/rules/react-layers.mdc), [`.cursor/rules/react-composition.mdc`](../../../../.cursor/rules/react-composition.mdc).
 
+`spaces/` is only domain folders (plus this README). Each domain uses `feature/` / `ui/` / `hooks/` / `util/` / `data-access/` / `constants/` as needed — nothing sits at the package root.
+
+| Domain                  | Role                                                      |
+| ----------------------- | --------------------------------------------------------- |
+| `files/`                | Shared space + file kernel (query, mutations, tus, merge) |
+| `wizard/`               | Author create flow (`upload/` step + share)               |
+| `manage/`               | Author manage surface                                     |
+| `share-viewer/`         | Recipient PIN gate + file list                            |
+| `upload-notifications/` | Upload toast                                              |
+
 ## Exports
 
-- `@repo/react/spaces` — `SpaceWizard` (+ `clearSpaceUploads`)
+- `@repo/react/spaces/wizard` — `SpaceWizard` (+ `clearSpaceUploads`)
 - `@repo/react/spaces/manage` — `SpaceManage`
 - `@repo/react/spaces/share-viewer` — recipient `ShareViewer`
 - `@repo/react/logo` — brand `DropLogo` (live storage meter)
@@ -29,4 +39,4 @@ Uploads start on file add (tus via `useSpaceUploadStore`). The progress toast re
 
 ## GraphQL
 
-Documents under `data-access/`. Prefer regenerating via `pnpm generate` after API schema emit.
+Documents live in each domain’s `data-access/` (`files/`, `wizard/`, `share-viewer/`). Prefer regenerating via `pnpm generate` after API schema emit.

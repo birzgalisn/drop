@@ -25,9 +25,8 @@ export function FileTableImageViewProvider<T extends TableRowBase>({
   useImageView: UseImageView<T>;
   children: ReactNode;
 }) {
-  const imageView = useImageView({ rows });
   const { open, isViewable, active, canNavigate, close, goPrev, goNext, getDownloadHref } =
-    imageView;
+    useImageView({ rows });
   const actions = { open, isViewable };
   const session = { active, canNavigate, close, goPrev, goNext, getDownloadHref };
 

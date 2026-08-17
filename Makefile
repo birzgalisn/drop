@@ -14,7 +14,7 @@ help:
 	@printf '  help         Show available commands\n'
 	@printf '  up           Start edge + dev stack (foreground)\n'
 	@printf '  down         Stop stack and remove volumes\n'
-	@printf '  preview      Start edge + preview stack (foreground)\n'
+	@printf '  preview      Start edge + preview stack (foreground, rebuild images)\n'
 	@printf '  shell        Open a shell in the turbo container\n'
 	@printf '  remove       Tear down everything, images, and clean workspace\n'
 
@@ -28,7 +28,7 @@ down:
 
 preview:
 	$(EDGE) up -d
-	$(PREVIEW) up
+	$(PREVIEW) up --build
 
 shell:
 	$(DEV) exec -it turbo sh

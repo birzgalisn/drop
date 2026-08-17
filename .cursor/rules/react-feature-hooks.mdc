@@ -131,7 +131,10 @@ Name each derived value and function in the hook body. The `return { … }` only
 
 ```ts
 const handleZip = (fileIds: string[]) => {
-  openDownload(`${apiBaseUrl}/spaces/${spaceId}/zip${getZipQuery(fileIds)}`);
+  Urls.open({
+    url: `${apiBaseUrl}/spaces/${spaceId}/zip`,
+    query: { fileIds },
+  });
 };
 
 return { zip: handleZip } as const;
@@ -142,7 +145,7 @@ Rename at the return when the public key is not `handleX` (`open: handleOpen`, `
 ```ts
 // avoid — inner fn is recreated with the whole object
 return {
-  zip: (fileIds: string[]) => openDownload(…),
+  zip: (fileIds: string[]) => Urls.open(…),
 };
 ```
 

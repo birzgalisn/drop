@@ -59,7 +59,9 @@ export function Stack({ gap = 'regular', ...props }: StackProps) {
 | `Stack` / `Group` `gap` | rhythm | `tight` (clustered), `regular` (default), `loose` (page) |
 | radius | corners | `none` / `sm` / `md` / `lg` / `xl` → `--radius-*` |
 | Phosphor `size` | icon | `ICON_SIZE.sm` 12 / `md` 14 / `lg` 16 / `xl` 20 |
-| `Button` `variant` | emphasis | `solid` → Mantine `filled`, `subtle` → `light` |
+| `Button` `variant` | emphasis | `solid` → Mantine `filled`, `subtle` → `light`, `default` |
+| `Button` `tone` | intent | `neutral` (default) / `danger` |
+| `Button` / `IconButton` `size` | control | `xxs` (26px) / `xs` (30px) / `sm` (36px) → `--button-height-*` |
 | `IconButton` `variant` | emphasis | `subtle` / `solid` / `default` / `ghost` |
 | `IconButton` `tone` | intent | `neutral` (default) / `danger` |
 | `Text` `variant` | copy role | `title` / `muted` (default) / `label` / `error` |
@@ -85,7 +87,7 @@ export const GAP = {
 export type Gap = keyof typeof GAP;
 ```
 
-`--gap-*`, `--radius-*`, `--text-xs` / `--text-sm`, `--font-sans` / `--font-mono` / `--font-heading`, `--accent`, and `--bg` / `--surface` / `--elevated` / `--border` / `--text` / `--muted` live on `:root` in the theme stylesheet. Mantine radius vars are aliases of `--radius-*` so Button / Paper follow the same scale. Palettes (`sand`, `graphite`) and heading sizes stay in `createTheme` — Mantine still needs those. Component look lives on the primitive, not in `theme.components`.
+`--gap-*`, `--radius-*`, `--button-height-xxs` / `--button-height-xs` / `--button-height-sm`, `--text-xs` / `--text-sm`, `--font-sans` / `--font-mono` / `--font-heading`, `--accent`, and `--bg` / `--surface` / `--elevated` / `--border` / `--text` / `--muted` live on `:root` in the theme stylesheet. Mantine radius vars are aliases of `--radius-*` so Button / Paper follow the same scale. Palettes (`sand`, `graphite`) and heading sizes stay in `createTheme` — Mantine still needs those. Component look lives on the primitive, not in `theme.components`.
 
 ## Catalog
 
@@ -100,8 +102,8 @@ export type Gap = keyof typeof GAP;
 | `Text` | Copy (`variant` token) |
 | `Anchor` | Accent text link |
 | `DotSeparator` | Inline `·` |
-| `Button` | Click / submit |
-| `IconButton` | Icon-only control (`variant`, `tone`; `href` opens a new tab) |
+| `Button` | Click / submit (`variant`, `tone`, `size`) |
+| `IconButton` | Icon-only control (`variant`, `tone`, `size`; `href` opens a new tab) |
 | `Input` | Single-line text |
 | `Pin` | Digit cells; `readOnly` readout |
 | `Image` | Raster image |
@@ -109,6 +111,7 @@ export type Gap = keyof typeof GAP;
 | `Notifications` | Toast host |
 | `Background` | Page atmosphere |
 | `Stepper` | Step track (`size`: `narrow` / `regular` / `wide`) |
+| `Loader` | Full-viewport spinner (`component`: `div` / `main`) |
 
 ## Assemble
 

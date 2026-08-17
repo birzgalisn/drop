@@ -2,6 +2,8 @@ import { ActionIcon as MantineActionIcon } from '@mantine/core';
 import clsx from 'clsx';
 import type { MouseEventHandler, ReactNode, Ref } from 'react';
 
+import { BUTTON_HEIGHT, type ButtonSize } from '../../util/button-size';
+
 import classes from './icon-button.module.css';
 
 const VARIANT = {
@@ -24,6 +26,7 @@ type IconButtonShared = {
   children: ReactNode;
   variant?: IconButtonVariant;
   tone?: IconButtonTone;
+  size?: ButtonSize;
   loading?: boolean;
   disabled?: boolean;
   className?: string;
@@ -45,6 +48,7 @@ export type IconButtonProps = IconButtonShared &
 export function IconButton({
   variant = 'subtle',
   tone = 'neutral',
+  size = 'xs',
   className,
   children,
   loading,
@@ -56,7 +60,7 @@ export function IconButton({
   const shared = {
     variant: VARIANT[variant],
     color: TONE[tone],
-    size: 'sm' as const,
+    size: BUTTON_HEIGHT[size],
     loading,
     disabled,
     'aria-label': ariaLabel,

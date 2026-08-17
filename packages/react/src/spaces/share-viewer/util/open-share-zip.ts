@@ -1,5 +1,4 @@
-import { getZipQuery } from '../../../common/util/build-query-string';
-import { openDownload } from '../../../common/util/open-download';
+import { Urls } from '../../../common/util/urls.util';
 
 export function openShareZip({
   apiBaseUrl,
@@ -10,5 +9,8 @@ export function openShareZip({
   token: string;
   fileIds: string[];
 }): void {
-  openDownload(`${apiBaseUrl}/shares/${token}/zip${getZipQuery(fileIds)}`);
+  Urls.open({
+    url: `${apiBaseUrl}/shares/${token}/zip`,
+    query: { fileIds },
+  });
 }

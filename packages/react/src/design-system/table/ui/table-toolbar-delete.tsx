@@ -1,5 +1,4 @@
-import { Button } from '@mantine/core';
-
+import { Button } from '../../button/feature/button';
 import { useTableContext } from '../hooks/create-table';
 import { getTableSelection } from '../util/table-selection';
 import type { TableRowBase } from '../util/types';
@@ -47,8 +46,8 @@ function TableToolbarDeleteButton({
   return (
     <Button
       size="xs"
-      color="red"
-      variant="light"
+      tone="danger"
+      variant="subtle"
       loading={loading}
       disabled={disabled}
       onClick={onClick}

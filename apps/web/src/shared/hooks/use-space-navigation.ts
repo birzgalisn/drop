@@ -1,4 +1,4 @@
-import { clearSpaceUploads, type SpaceWizardStep } from '@repo/react/spaces';
+import { clearSpaceUploads, type SpaceWizardStep } from '@repo/react/spaces/wizard';
 import { useNavigate } from '@tanstack/react-router';
 
 import { stashSharePin } from './use-share-pin';

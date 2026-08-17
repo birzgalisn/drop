@@ -29,7 +29,7 @@ design-system/file-explorer/
     use-file-explorer.ts              ← optional local UI state
 ```
 
-Domain hook (`spaces/hooks/use-space-files.ts`) owns `useReducer` and imports `Action` from `file-explorer/util/types.ts`.
+Domain hook (`spaces/files/hooks/use-space-files.ts`) owns `useReducer` and imports `Action` from `file-explorer/util/types.ts`.
 
 ## 2. Types — `util/types.ts`
 
@@ -231,12 +231,12 @@ Domain reducer handles `'rename'` and calls other `util/` transforms (`react-fea
 
 ## 8. Compose edge — the only `.map`
 
-`spaces/feature/space-manage.tsx`:
+`spaces/manage/feature/space-manage.tsx`:
 
 ```tsx
 import { FileExplorer, Stack } from '@repo/react/design-system';
 
-import { useSpaceFiles } from '../hooks/use-space-files';
+import { useSpaceFiles } from '../../files/hooks/use-space-files';
 
 export function SpaceManage({ spaceId }: SpaceManageProps) {
   const { files, dispatch } = useSpaceFiles({ spaceId });

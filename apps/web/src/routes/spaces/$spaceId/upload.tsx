@@ -1,4 +1,4 @@
-import { SpaceWizard } from '@repo/react/spaces';
+import { SpaceWizard } from '@repo/react/spaces/wizard';
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 
 import { useSpaceNavigation } from '../../../shared/hooks/use-space-navigation';

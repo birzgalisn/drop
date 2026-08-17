@@ -1,17 +1,16 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { Table, useDefaultTable } from '../../table/feature/table';
 import type { TableFeatures } from '../../table/hooks/create-table';
 import { useTableEngine } from '../../table/hooks/use-table-engine';
-import { TableToolbar } from '../../table/ui/table-toolbar';
 import type { TableRowBase } from '../../table/util/types';
 import { useDefaultImageView } from '../hooks/use-default-image-view';
 import { FileTableImageView } from '../ui/file-table-image-view';
 import { FileTableList } from '../ui/file-table-list';
 import { FileTableImageViewProvider } from '../ui/image-view-context';
 import { FileTableImageViewSearch } from '../ui/image-view-search-context';
-import type { FileTableListProps, UseFileTable, UseImageView } from '../util/types';
+import type { UseFileTable, UseImageView } from '../util/types';
 
 export type {
   FileTableListProps,
@@ -27,24 +26,12 @@ export { useImageViewSession } from '../hooks/use-image-view-session';
 export { useImageViewContext } from '../ui/image-view-context';
 export { rowFilter, useTableEngine } from '../../table/feature/table';
 
-export type FileTableSlots = {
-  Toolbar: typeof TableToolbar;
-  List: (props: FileTableListProps) => ReactElement | null;
-  ImageView: typeof FileTableImageView;
-};
-
 export type FileTableProps<T extends TableRowBase> = {
   rows: T[];
   columns: Array<ColumnDef<TableFeatures, T>>;
   useTable?: UseFileTable<T>;
   useImageView?: UseImageView<T>;
-  children: ReactNode | ((slots: FileTableSlots) => ReactNode);
-};
-
-const fileTableSlots = {
-  Toolbar: Table.Toolbar,
-  List: FileTableList,
-  ImageView: FileTableImageView,
+  children?: ReactNode;
 };
 
 export function FileTable<T extends TableRowBase>({
@@ -54,19 +41,17 @@ export function FileTable<T extends TableRowBase>({
   useImageView = useDefaultImageView as UseImageView<T>,
   children,
 }: FileTableProps<T>) {
-  const options = useTable({ rows });
   const table = useTableEngine({
     rows,
     columns,
-    options,
+    options: useTable({ rows }),
   });
-  const content = typeof children === 'function' ? children(fileTableSlots) : children;
   const visibleRows = table.getRowModel().rows.map((row) => row.original);
 
   return (
     <Table table={table}>
       <FileTableImageViewProvider rows={visibleRows} useImageView={useImageView}>
-        {content}
+        {children}
       </FileTableImageViewProvider>
     </Table>
   );

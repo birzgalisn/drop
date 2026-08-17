@@ -23,7 +23,7 @@ packages/shared                  Isomorphic helpers/schemas (`@repo/shared`)
 | ------- | ------------------ | --------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | Tooling | `packages/tooling` | `@repo/tooling` | Subpaths: `/typescript/*`, `/oxlint/*`, `/jest`, `/postcss/mantine`                                                              |
 | Nest    | `packages/nest`    | `@repo/nest`    | Subpaths: `/common`, `/config`, `/cors`, `/drizzle`, `/health`, `/media`, `/tus`, `/spaces`, `/pubsub`, `/errors`, `/validation` |
-| React   | `packages/react`   | `@repo/react`   | Subpaths: `/design-system`, `/spaces`, `/form`. Feature modules: `data-access/` / `feature/` / `ui/` / `util/`                   |
+| React   | `packages/react`   | `@repo/react`   | Subpaths: `/design-system`, `/logo`, `/common`, `/spaces/wizard`, `/spaces/manage`, `/spaces/share-viewer`                       |
 | Shared  | `packages/shared`  | `@repo/shared`  | AppError, UploadType, space limits/schemas                                                                                       |
 
 Rules:

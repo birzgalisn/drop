@@ -4,11 +4,11 @@
   "private": true,
   "exports": {
     "./design-system": "./src/design-system/index.ts",
-    "./logo": "./src/logo/feature/drop-logo.tsx",
-    "./spaces": "./src/spaces/feature/space-wizard.tsx",
-    "./spaces/share-viewer": "./src/spaces/share-viewer/feature/share-viewer.tsx",
-    "./spaces/manage": "./src/spaces/feature/space-manage.tsx",
-    "./form": "./src/common/hooks/use-app-form.ts"
+    "./common": "./src/common/index.ts",
+    "./logo": "./src/logo/index.ts",
+    "./spaces/manage": "./src/spaces/manage/index.ts",
+    "./spaces/share-viewer": "./src/spaces/share-viewer/index.ts",
+    "./spaces/wizard": "./src/spaces/wizard/index.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

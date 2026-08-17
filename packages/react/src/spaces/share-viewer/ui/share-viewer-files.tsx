@@ -1,29 +1,23 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, Badge, Loader } from '@mantine/core';
+import { Alert, Badge } from '@mantine/core';
 import { ArrowSquareOutIcon } from '@phosphor-icons/react/ArrowSquareOut';
 
 import { Center } from '../../../design-system/center/feature/center';
 import { Container } from '../../../design-system/container/feature/container';
 import { Dropzone } from '../../../design-system/dropzone/feature/dropzone';
-import {
-  FileTable,
-  type UseFileTable,
-  type UseImageView,
-} from '../../../design-system/file-table/feature/file-table';
+import { FileTable } from '../../../design-system/file-table/feature/file-table';
 import { Group } from '../../../design-system/group/feature/group';
+import { Loader } from '../../../design-system/loader/feature/loader';
 import { Stack } from '../../../design-system/stack/feature/stack';
 import { useTableContext } from '../../../design-system/table/feature/table';
 import { Text } from '../../../design-system/text/feature/text';
 import { ICON_SIZE } from '../../../design-system/util/icon-size';
 import { DropLogo } from '../../../logo/feature/drop-logo';
-import { SharedSpaceDocument } from '../../data-access/shared-space.generated';
-import { useSharedSpaceLiveUpdates } from '../../hooks/use-space-live-updates';
+import { SharedSpaceDocument } from '../data-access/shared-space.generated';
 import { useShareViewerFileTable } from '../hooks/use-share-viewer-file-table';
 import { useShareViewerImageView } from '../hooks/use-share-viewer-image-view';
-import {
-  getShareViewerFileRows,
-  type ShareViewerFileRow,
-} from '../util/get-share-viewer-file-rows';
+import { useSharedSpaceLiveUpdates } from '../hooks/use-shared-space-live-updates';
+import { getShareViewerFileRows } from '../util/get-share-viewer-file-rows';
 import { openShareZip } from '../util/open-share-zip';
 import { shareViewerFileColumns } from '../util/share-viewer-file-columns';
 
@@ -54,11 +48,7 @@ export function ShareViewerFiles({
   useSharedSpaceLiveUpdates({ token, spaceId: sharedSpace?.id });
 
   if (loading) {
-    return (
-      <Center mih="100vh">
-        <Loader />
-      </Center>
-    );
+    return <Loader />;
   }
 
   if (error || !sharedSpace) {
@@ -77,15 +67,8 @@ export function ShareViewerFiles({
     apiBaseUrl,
   });
 
-  const useTable: UseFileTable<ShareViewerFileRow> = ({ rows }) =>
-    useShareViewerFileTable({ rows });
-
-  const useImageView: UseImageView<ShareViewerFileRow> = ({ rows }) =>
-    useShareViewerImageView({
-      rows,
-      token,
-      apiBaseUrl,
-    });
+  const useImageView = ({ rows }: { rows: typeof files }) =>
+    useShareViewerImageView({ rows, token, apiBaseUrl });
 
   return (
     <Container size="sm" py={48}>
@@ -120,23 +103,19 @@ export function ShareViewerFiles({
           <FileTable
             rows={files}
             columns={shareViewerFileColumns}
-            useTable={useTable}
+            useTable={useShareViewerFileTable}
             useImageView={useImageView}
           >
-            {({ Toolbar, List, ImageView }) => (
-              <>
-                <Toolbar>
-                  <Toolbar.Search placeholder="Search by name" />
-                  <Toolbar.Actions>
-                    <Toolbar.Zip
-                      onZip={(fileIds) => openShareZip({ apiBaseUrl, token, fileIds })}
-                    />
-                  </Toolbar.Actions>
-                </Toolbar>
-                <List empty={<ShareViewerFilesEmpty />} />
-                <ImageView />
-              </>
-            )}
+            <FileTable.Toolbar>
+              <FileTable.Toolbar.Search placeholder="Search by name" />
+              <FileTable.Toolbar.Actions>
+                <FileTable.Toolbar.Zip
+                  onZip={(fileIds) => openShareZip({ apiBaseUrl, token, fileIds })}
+                />
+              </FileTable.Toolbar.Actions>
+            </FileTable.Toolbar>
+            <FileTable.List empty={<ShareViewerFilesEmpty />} />
+            <FileTable.ImageView />
           </FileTable>
         </Dropzone>
       </Stack>

@@ -8,13 +8,11 @@ export function FileTableImageViewStage() {
     return null;
   }
 
-  const previewSrc = active.previewSrc ?? null;
-
   return (
     <ProgressiveImage
       key={active.id}
       src={active.src}
-      preview={previewSrc}
+      preview={active.previewSrc}
       alt={active.name}
       fit="contain"
     />

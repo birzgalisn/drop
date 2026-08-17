@@ -1,5 +1,4 @@
-import { Button } from '@mantine/core';
-
+import { Button } from '../../button/feature/button';
 import { useTableContext } from '../hooks/create-table';
 import { getTableSelection } from '../util/table-selection';
 import type { TableRowBase } from '../util/types';
@@ -19,7 +18,7 @@ export function TableToolbarZip({ onZip }: { onZip: (fileIds: string[]) => void 
         return (
           <Button
             size="xs"
-            variant="light"
+            variant="subtle"
             onClick={() => onZip(isAnySelected ? selectedIds : [])}
             aria-label={isAnySelected ? 'Download selected files' : 'Download all files'}
           >

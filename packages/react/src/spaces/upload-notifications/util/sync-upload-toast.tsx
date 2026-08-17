@@ -1,7 +1,7 @@
 import { notifications } from '@mantine/notifications';
 
-import { useSpaceUploadStore, type SpaceUploadItem } from '../../util/upload-space-files-tus';
-import { COMPLETE_AUTO_CLOSE_MS, UPLOAD_NOTIFICATION_ID } from '../constants';
+import { useSpaceUploadStore, type SpaceUploadItem } from '../../files/util/upload-space-files-tus';
+import { COMPLETE_AUTO_CLOSE_MS, UPLOAD_NOTIFICATION_ID } from '../constants/upload-notifications';
 import { CompleteUploadNotificationBody } from '../ui/upload-toast-complete-body';
 import { LiveUploadNotificationBody } from '../ui/upload-toast-live-body';
 import { isActiveUpload, upsertUploadNotification } from './upload-notification-helpers';

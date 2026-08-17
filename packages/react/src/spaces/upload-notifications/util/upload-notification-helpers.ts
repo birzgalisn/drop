@@ -1,8 +1,8 @@
 import { notifications, notificationsStore } from '@mantine/notifications';
 import { pluralize } from '@repo/shared';
 
-import type { SpaceUploadItem, SpaceUploadStatus } from '../../util/upload-space-files-tus';
-import { UPLOAD_NOTIFICATION_ID } from '../constants';
+import type { SpaceUploadItem, SpaceUploadStatus } from '../../files/util/upload-space-files-tus';
+import { UPLOAD_NOTIFICATION_ID } from '../constants/upload-notifications';
 
 export function isActiveUpload(status: SpaceUploadStatus): boolean {
   return status === 'pending' || status === 'uploading' || status === 'paused';

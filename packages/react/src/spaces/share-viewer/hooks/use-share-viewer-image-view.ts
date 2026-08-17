@@ -4,8 +4,8 @@ import {
   type UseImageViewResult,
 } from '../../../design-system/file-table/feature/file-table';
 import { useImageViewSearch } from '../../../design-system/file-table/ui/image-view-search-context';
-import type { SpaceFileFieldsFragment } from '../../data-access/space-fields.generated';
-import { spaceFileMediaUrl } from '../../util/space-file-media-url';
+import type { SpaceFileFieldsFragment } from '../../files/data-access/space-fields.generated';
+import { spaceFileMediaUrl } from '../../files/util/space-file-media-url';
 
 export function useShareViewerImageView({
   rows,

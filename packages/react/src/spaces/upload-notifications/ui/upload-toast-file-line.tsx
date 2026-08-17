@@ -6,7 +6,7 @@ import { IconButton } from '../../../design-system/icon-button/feature/icon-butt
 import { Stack } from '../../../design-system/stack/feature/stack';
 import { Text } from '../../../design-system/text/feature/text';
 import { ICON_SIZE } from '../../../design-system/util/icon-size';
-import type { SpaceUploadItem } from '../../util/upload-space-files-tus';
+import type { SpaceUploadItem } from '../../files/util/upload-space-files-tus';
 import { uploadPercent } from '../util/upload-notification-helpers';
 
 export function UploadFileLine({

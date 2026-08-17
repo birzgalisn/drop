@@ -44,6 +44,12 @@
   --mantine-radius-md: var(--radius-md);
   --mantine-radius-lg: var(--radius-lg);
   --mantine-radius-xl: var(--radius-xl);
+
+  --button-height-xxs: 26px;
+  --button-height-xs: 30px;
+  --button-height-sm: 36px;
+  --button-padding-x-xxs: 8px;
+  --mantine-font-size-xxs: var(--text-xs);
 }
 
 html,

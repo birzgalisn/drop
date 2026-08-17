@@ -1,0 +1,16 @@
+.root {
+  --button-height: var(--button-height-sm);
+  height: var(--button-height);
+}
+
+.xxs {
+  --button-height: var(--button-height-xxs);
+}
+
+.xs {
+  --button-height: var(--button-height-xs);
+}
+
+.sm {
+  --button-height: var(--button-height-sm);
+}

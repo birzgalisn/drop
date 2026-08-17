@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Background } from '../../../design-system/background/feature/background';
 import { Box } from '../../../design-system/box/feature/box';
-import { useShareUnlock } from '../../hooks/use-share-unlock';
+import { useShareUnlock } from '../hooks/use-share-unlock';
 import { ShareViewerFiles } from '../ui/share-viewer-files';
 import { ShareViewerUnlock } from '../ui/share-viewer-unlock';
 

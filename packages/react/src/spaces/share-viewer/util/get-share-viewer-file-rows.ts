@@ -1,5 +1,5 @@
-import type { SpaceFileFieldsFragment } from '../../data-access/space-fields.generated';
-import { spaceFileMediaUrl } from '../../util/space-file-media-url';
+import type { SpaceFileFieldsFragment } from '../../files/data-access/space-fields.generated';
+import { spaceFileMediaUrl } from '../../files/util/space-file-media-url';
 
 export type ShareViewerFileRow = SpaceFileFieldsFragment & {
   thumbSrc: string | null;

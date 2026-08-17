@@ -1,6 +1,6 @@
 import { Table as MantineTable } from '@mantine/core';
 import clsx from 'clsx';
-import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 
 import type { TableRowBase } from '../util/types';
 import { TableRowContext } from './table-row-context';
@@ -11,13 +11,11 @@ export function TableRow<T extends TableRowBase>({
   row,
   onOpen,
   'aria-label': ariaLabel,
-  style,
   children,
 }: {
   row: T;
   onOpen?: () => void;
   'aria-label'?: string;
-  style?: CSSProperties;
   children?: ReactNode;
 }) {
   const handleClick = () => {
@@ -51,9 +49,7 @@ export function TableRow<T extends TableRowBase>({
 
   return (
     <TableRowContext.Provider value={{ row }}>
-      <MantineTable.Tr style={style} {...openProps}>
-        {children}
-      </MantineTable.Tr>
+      <MantineTable.Tr {...openProps}>{children}</MantineTable.Tr>
     </TableRowContext.Provider>
   );
 }

@@ -2,9 +2,5 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.875rem;
-  height: 1.875rem;
-  min-width: 1.875rem;
-  min-height: 1.875rem;
   padding: 0;
 }

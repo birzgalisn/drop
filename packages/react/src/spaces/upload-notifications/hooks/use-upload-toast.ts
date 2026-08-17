@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from 'react';
 
-import { useSpaceUploadStore, type SpaceUploadItem } from '../../util/upload-space-files-tus';
+import { useSpaceUploadStore, type SpaceUploadItem } from '../../files/util/upload-space-files-tus';
 import { syncUploadToast } from '../util/sync-upload-toast';
 import { isActiveUpload } from '../util/upload-notification-helpers';
 

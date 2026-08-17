@@ -7,7 +7,7 @@ import { IconButton } from '../../../design-system/icon-button/feature/icon-butt
 import { Stack } from '../../../design-system/stack/feature/stack';
 import { Text } from '../../../design-system/text/feature/text';
 import { ICON_SIZE } from '../../../design-system/util/icon-size';
-import { useSpaceUploadStore } from '../../util/upload-space-files-tus';
+import { useSpaceUploadStore } from '../../files/util/upload-space-files-tus';
 import {
   activeUploadTitle,
   isActiveUpload,

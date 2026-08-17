@@ -2,7 +2,7 @@ import { useForm, type FormErrors, type UseFormInput, type UseFormReturnType } f
 import { notifications } from '@mantine/notifications';
 import type { z } from 'zod';
 
-import { getAppErrorFieldErrors, getAppErrorMessage } from '../util/get-app-error-field-errors';
+import { GraphqlErrors } from '../util/graphql-errors.util';
 
 /**
  * Builds a Mantine `validate` function from a Zod schema. Issue paths are
@@ -55,7 +55,7 @@ export function useAppForm<Values extends Record<string, unknown>>(
   });
 
   const handleError = (error: unknown) => {
-    const fieldErrors = getAppErrorFieldErrors(error);
+    const fieldErrors = GraphqlErrors.fieldErrors(error);
 
     for (const fieldError of fieldErrors) {
       if (fieldError.path) {
@@ -63,7 +63,7 @@ export function useAppForm<Values extends Record<string, unknown>>(
       }
     }
 
-    notifications.show({ color: 'red', message: getAppErrorMessage(error) });
+    notifications.show({ color: 'red', message: GraphqlErrors.message(error) });
   };
 
   return Object.assign(form, { handleError });

@@ -12,29 +12,12 @@ import { TableTr } from './table-tr';
 
 import classes from './table-list.module.css';
 
-export function TableList({
-  empty = null,
-  head,
-  children,
-}: {
-  empty?: ReactNode;
-  head?: ReactNode;
-  children?: ReactNode;
-}) {
+export function TableList({ empty = null, children }: { empty?: ReactNode; children?: ReactNode }) {
   const table = useTableContext<TableRowBase>();
   const headerGroups = table.getHeaderGroups();
   const coreRowCount = table.getCoreRowModel().rows.length;
   const visibleColumnCount = table.getVisibleLeafColumns().length;
   const rows = table.getRowModel().rows;
-  const headerCells = head ?? (
-    <>
-      {headerGroups.map((headerGroup) =>
-        headerGroup.headers.map((header) => (
-          <TableListHeaderCell key={header.id} header={header} />
-        )),
-      )}
-    </>
-  );
 
   if (coreRowCount === 0) {
     return empty;
@@ -48,7 +31,13 @@ export function TableList({
         withTableBorder={false}
         withRowBorders
       >
-        <TableListHead>{headerCells}</TableListHead>
+        <TableListHead>
+          {headerGroups.map((headerGroup) =>
+            headerGroup.headers.map((header) => (
+              <TableListHeaderCell key={header.id} header={header} />
+            )),
+          )}
+        </TableListHead>
         <TableTbody>
           {rows.length === 0 ? (
             <TableTr>

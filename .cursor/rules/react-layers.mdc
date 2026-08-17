@@ -8,7 +8,7 @@ alwaysApply: false
 
 # React layers
 
-Keep the same roles inside `packages/react/src/<domain>/` (and subdomains like `wizard-upload/`, `share-viewer/`).
+Keep the same roles inside `packages/react/src/<domain>/` (and subdomains like `wizard/upload/`, `share-viewer/`).
 
 ## Folder contract
 
@@ -24,7 +24,7 @@ Every domain (and subdomain) is **only** these directories. No loose files besid
 | `constants/` | Frozen tables / defaults (when they are not a single util module) | `util/` types |
 | `icons/` | Tiny SVG components | — |
 
-`README.md` may sit at the domain root. Public re-exports live on the package `index` / export map, not as a stray `index.ts` inside the feature.
+`README.md` may sit at the domain root. Public re-exports live in a domain-root `index.ts` that the package export map points at — not a stray `index.ts` inside `feature/`.
 
 ```
 packages/react/src/design-system/file-explorer/

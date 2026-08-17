@@ -2,7 +2,7 @@ import { Box } from '@mantine/core';
 
 import { Stack } from '../../../design-system/stack/feature/stack';
 import { Text } from '../../../design-system/text/feature/text';
-import type { SpaceUploadItem } from '../../util/upload-space-files-tus';
+import type { SpaceUploadItem } from '../../files/util/upload-space-files-tus';
 import { completeNotificationTitle } from '../util/upload-notification-helpers';
 import { UploadFileLine } from './upload-toast-file-line';
 
